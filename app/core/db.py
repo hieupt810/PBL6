@@ -1,4 +1,5 @@
 from core.config import settings
+from models import *
 from sqlalchemy import create_engine
 from sqlmodel import Session, SQLModel
 

@@ -20,8 +20,8 @@ class ProductUpdate(ProductBase):
 
 class Product(ProductBase, table=True):
     id: uuid.UUID = Field(default=uuid.uuid4, primary_key=True)
-    created_at: datetime = Field(default=datetime.now(), nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.now(), nullable=False)
+    created_at: datetime = Field(default=lambda: datetime.now(), nullable=False)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(), nullable=False)
 
 
 class ProductPublic(ProductBase):
