@@ -4,6 +4,6 @@ for module in os.listdir(os.path.dirname(__file__)):
     if module == "__init__.py" or module[-3:] != ".py":
         continue
 
-    __import__(f"models.{module[:-3]}", locals(), globals())
+    __import__(f"app.models.{module[:-3]}", locals(), globals())
 
 del module

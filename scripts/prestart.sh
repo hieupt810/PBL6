@@ -3,5 +3,5 @@
 set -e
 set -x
 
-python app/prestart.py
-python app/initial_data.py
+python -m app.prestart
+python -m app.initial_data

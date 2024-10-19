@@ -1,7 +1,8 @@
-from api.main import api_router
-from core.config import settings
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+
+from app.api.main import api_router
+from app.core.config import settings
 
 app = FastAPI(title="PBL6 API")
 
