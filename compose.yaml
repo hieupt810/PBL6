@@ -21,6 +21,12 @@ services:
             - LC_ALL=en_US.UTF-8
         ports:
             - 5432:5432
+        networks:
+            - pbl6-public
 
 volumes:
     pgdata:
+
+
+networks:
+    pbl6-public:
