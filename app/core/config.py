@@ -76,6 +76,8 @@ class Settings(BaseSettings):
             else:
                 raise ValueError(message)
 
+    SELENIUM_HOST: str
+
     @model_validator(mode="after")
     def _enforce_non_default_secrets(self) -> Self:
         self._check_default_secret("SECRET_KEY", self.SECRET_KEY)

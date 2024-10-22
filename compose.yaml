@@ -22,11 +22,22 @@ services:
     networks:
       - pbl6-public
 
-  fastapi:
-    container_name: fastapi
+  selenium:
+    container_name: selenium
+    image: seleniarm/standalone-chromium:latest
+    restart: always
+    privileged: true
+    shm_size: 2gb
+    ports:
+      - 4444:4444
+    networks:
+      - pbl6-public
+
+  server:
+    container_name: server
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
+      - selenium
     build:
       context: .
       dockerfile: Dockerfile
