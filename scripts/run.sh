@@ -1,3 +1,3 @@
 #!/bin/bash
 
-fastapi run app/main.py
+docker-compose up

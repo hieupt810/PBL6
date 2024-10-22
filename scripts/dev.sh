@@ -1,3 +1,4 @@
 #!/bin/bash
 
-fastapi dev app/main.py
+docker-compose down
+docker-compose up --watch

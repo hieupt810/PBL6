@@ -1,32 +1,53 @@
 services:
-    pg:
-        container_name: pg
-        image: postgres:15
-        restart: always
-        healthcheck:
-            test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
-            interval: 10s
-            retries: 5
-            start_period: 30s
-            timeout: 10s
-        volumes:
-            - pgdata:/var/lib/postgresql/data
-        env_file:
-            - .env
-        environment:
-            - POSTGRES_USER=${POSTGRES_USER?Variable POSTGRES_USER not set}
-            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable POSTGRES_PASSWORD not set}
-            - POSTGRES_DB=${POSTGRES_DB?Variable POSTGRES_DB not set}
-            - LANG=en_US.UTF-8
-            - LC_ALL=en_US.UTF-8
-        ports:
-            - 5432:5432
-        networks:
-            - pbl6-public
+  postgres:
+    container_name: postgres
+    image: postgres:15-alpine
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER?Variable POSTGRES_USER not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable POSTGRES_PASSWORD not set}
+      - POSTGRES_DB=${POSTGRES_DB?Variable POSTGRES_DB not set}
+    ports:
+      - 5432:5432
+    networks:
+      - pbl6-public
 
-volumes:
-    pgdata:
-
+  fastapi:
+    container_name: fastapi
+    depends_on:
+      postgres:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    env_file:
+      - .env
+    ports:
+      - 8000:8000
+    networks:
+      - pbl6-public
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /fastapi/app
+        - action: rebuild
+          path: requirements.txt
 
 networks:
-    pbl6-public:
+  pbl6-public:
+
+
+volumes:
+  postgres:
