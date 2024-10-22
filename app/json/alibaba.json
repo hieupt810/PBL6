@@ -1,0 +1,11 @@
+{
+    "categories": [
+        "https://www.alibaba.com/Consumer-Electronics_p44",
+        "https://www.alibaba.com/Home-Garden_p15"
+    ],
+    "title": ".hugo4-pc-grid-item:has(.pic-wrapper):has(.subject):has(.price) > .hugo4-product > .hugo4-product-wrap-margin > .subject > span",
+    "image": ".hugo4-pc-grid-item:has(.pic-wrapper):has(.subject):has(.price) > .hugo4-product > .pic-wrapper > .hugo4-product-picture > .picture-image",
+    "price": ".hugo4-pc-grid-item:has(.pic-wrapper):has(.subject):has(.price) > .hugo4-product > .hugo4-product-wrap-margin > .hugo4-product-price-area > .price > div",
+    "href": ".hugo4-pc-grid-item:has(.pic-wrapper):has(.subject):has(.price) > .hugo4-product",
+    "min_order": ".hugo4-pc-grid-item:has(.pic-wrapper):has(.subject):has(.price) > .hugo4-product > .hugo4-product-wrap-margin > .moq > .moq-number"
+}
