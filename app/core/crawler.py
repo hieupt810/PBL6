@@ -8,7 +8,7 @@ class Driver:
     def __init__(self, max_length: int = 250) -> None:
         self.__max_length = max_length
         options = ChromeOptions()
-        self.__driver = Remote(command_executor=settings.SELENIUM_HOST, options=options)
+        self.__driver = Remote(command_executor=settings.SELENIUM_URL, options=options)
 
     def open_new_tab(self, url: str):
         self.__driver.execute_script(f"window.open('{url}', '_blank');")

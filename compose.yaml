@@ -36,8 +36,8 @@ services:
   server:
     container_name: server
     depends_on:
-      - postgres
-      - selenium
+      postgres:
+        condition: service_healthy
     build:
       context: .
       dockerfile: Dockerfile
@@ -52,9 +52,9 @@ services:
       watch:
         - action: sync
           path: ./app
-          target: /fastapi/app
+          target: /app
         - action: rebuild
-          path: requirements.txt
+          path: ./requirements.txt
 
 networks:
   pbl6-public:

@@ -76,7 +76,14 @@ class Settings(BaseSettings):
             else:
                 raise ValueError(message)
 
+    # Selenium
     SELENIUM_HOST: str
+    SELENIUM_PORT: int = 4444
+
+    @computed_field
+    @property
+    def SELENIUM_URL(self) -> str:
+        return f"http://{self.SELENIUM_HOST}:{self.SELENIUM_PORT}/wd/hub"
 
     @model_validator(mode="after")
     def _enforce_non_default_secrets(self) -> Self:
