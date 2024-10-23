@@ -18,6 +18,7 @@ def parse_cors(v: Any) -> list[str] | str:
         return [i.strip() for i in v.split(",")]
     elif isinstance(v, list | str):
         return v
+
     raise ValueError(v)
 
 

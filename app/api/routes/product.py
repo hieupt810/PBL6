@@ -56,7 +56,7 @@ async def crawl_product(session: SessionDep) -> Message:
     try:
         data = load_json("alibaba")
         for link in data["categories"]:
-            driver.open_new_tab(link)
+            driver.get(link)
 
             titles = driver.find_by_css_selector(data["title"])
             images = driver.find_by_css_selector(data["image"])
@@ -77,8 +77,7 @@ async def crawl_product(session: SessionDep) -> Message:
                 session.add(product)
                 session.commit()
 
-            logger.info(f"Successfully crawled products in {link}")
-            driver.close_current_tab()
+            logger.info(f"Successfully updated to the database!")
     finally:
         driver.close()
 

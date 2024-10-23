@@ -2,7 +2,7 @@ services:
   postgres:
     container_name: postgres
     image: postgres:15-alpine
-    restart: always
+    restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
@@ -25,7 +25,7 @@ services:
   selenium:
     container_name: selenium
     image: seleniarm/standalone-chromium:latest
-    restart: always
+    restart: unless-stopped
     privileged: true
     shm_size: 2gb
     ports:
@@ -41,7 +41,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: on-failure
+    restart: unless-stopped
     env_file:
       - .env
     ports:
@@ -50,7 +50,7 @@ services:
       - pbl6-public
     develop:
       watch:
-        - action: sync
+        - action: sync+restart
           path: ./app
           target: /app
         - action: rebuild
@@ -58,7 +58,7 @@ services:
 
 networks:
   pbl6-public:
-
+    driver: bridge
 
 volumes:
   postgres:
