@@ -29,22 +29,18 @@ class Settings(BaseSettings):
 
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: Literal["development", "production"] = "development"
-
     SECRET_KEY: str = secrets.token_urlsafe(32)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
 
     # CORS
-    FRONTEND_HOST: str = "http://localhost:3000"
-    BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = (
-        []
-    )
+    CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = [
+        "http://localhost:3000"
+    ]
 
     @computed_field
     @property
     def all_cors_origins(self) -> list[str]:
-        return [str(origin).rstrip("/") for origin in self.BACKEND_CORS_ORIGINS].append(
-            self.FRONTEND_HOST
-        )
+        return [str(origin).rstrip("/") for origin in self.CORS_ORIGINS]
 
     # Database
     POSTGRES_SERVER: str
