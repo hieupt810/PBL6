@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "*.css": "tailwindcss",
-        "vector": "cpp",
-        "string": "cpp"
-    }
-}
