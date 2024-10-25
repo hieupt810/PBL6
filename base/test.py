@@ -1,3 +1,4 @@
+import logging
 import os
 
 import torch
@@ -14,7 +15,7 @@ def load_test_dataset(
     batch_size: int = 32,
 ):
     """Load the test dataset and create the DataLoader"""
-    dir = os.path.join(root, folder)
+    dir = os.path.join(root, "dataset", folder)
     dataset = ImageFolder(root=dir, transform=transform)
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
 
@@ -51,11 +52,17 @@ def load_trained_model(
     return model, transform, device
 
 
+# Set up the logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Load the model and the test dataset
 model, transform, device = load_trained_model(
     model_name="checkpoints/model_10.pth", base_model="google/vit-base-patch16-224"
 )
 test_loader = load_test_dataset(transform, folder="train")
 
+# Test the model
 correct, total = 0, 0
 with torch.no_grad():
     for images, labels in test_loader:
@@ -65,4 +72,5 @@ with torch.no_grad():
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
 
-print(f"Accuracy: {100 * correct / total:.2f}%")
+# Print the accuracy
+logger.info(f"Accuracy: {100 * correct / total:.2f}%")
