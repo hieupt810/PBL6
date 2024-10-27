@@ -3,13 +3,13 @@ import os
 
 
 def load_json(website: str):
-    __basedir = os.path.abspath(os.path.dirname(__file__))
-    __dirname = os.path.join(__basedir, "resources", f"{website.lower()}.json")
+    root = os.path.abspath(os.path.dirname(__file__))
+    dir = os.path.join(root, "resources", f"{website.lower()}.json")
 
-    if not os.path.exists(__dirname):
-        raise FileNotFoundError(f"File {__dirname} not found")
+    if not os.path.exists(dir):
+        raise FileNotFoundError(f"File {dir} not found")
 
-    with open(__dirname, "r") as file:
+    with open(dir, "r") as file:
         text = file.read()
 
         return json.loads(text)

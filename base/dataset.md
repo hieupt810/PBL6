@@ -29,4 +29,13 @@
 
 ## Fashion
 
-1.
+1. Shoes
+2. Accessories
+3. Accessories
+4. T-Shirt
+5. Hoodie
+6. Jacket
+7. Bag
+8. Wallet
+9. Backpack
+10. Handbag

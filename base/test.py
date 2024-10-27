@@ -1,4 +1,3 @@
-import logging
 import os
 
 import torch
@@ -10,8 +9,8 @@ from transformers import ViTForImageClassification, ViTImageProcessor
 
 def load_test_dataset(
     transform: transforms.Compose,
+    root: str = "/",
     folder: str = "test",
-    root: str = os.path.dirname(os.path.abspath(__file__)),
     batch_size: int = 32,
 ):
     """Load the test dataset and create the DataLoader"""
@@ -22,18 +21,14 @@ def load_test_dataset(
     return loader
 
 
-def load_trained_model(
-    model_name: str,
-    base_model: str,
-    root: str = os.path.dirname(os.path.abspath(__file__)),
-):
+def load_trained_model(filename: str, model: str, root: str = "/"):
     """Load the model and the transform function"""
-    dir = os.path.join(root, model_name)
+    dir = os.path.join(root, filename)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load the model
-    model = ViTForImageClassification.from_pretrained(base_model)
-    feature_extractor = ViTImageProcessor.from_pretrained(base_model)
+    model = ViTForImageClassification.from_pretrained(model)
+    processor = ViTImageProcessor.from_pretrained(model)
 
     # Load the weights
     model.load_state_dict(torch.load(dir, map_location=device, weights_only=True))
@@ -43,22 +38,16 @@ def load_trained_model(
         [
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
-            transforms.Normalize(
-                mean=feature_extractor.image_mean, std=feature_extractor.image_std
-            ),
+            transforms.Normalize(mean=processor.image_mean, std=processor.image_std),
         ]
     )
 
     return model, transform, device
 
 
-# Set up the logger
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # Load the model and the test dataset
 model, transform, device = load_trained_model(
-    model_name="checkpoints/model_10.pth", base_model="google/vit-base-patch16-224"
+    filename="model_5.pth", model="google/vit-base-patch16-224"
 )
 test_loader = load_test_dataset(transform, folder="train")
 
@@ -73,4 +62,4 @@ with torch.no_grad():
         correct += (predicted == labels).sum().item()
 
 # Print the accuracy
-logger.info(f"Accuracy: {100 * correct / total:.2f}%")
+print(f"Accuracy: {100 * correct / total:.2f}%")
