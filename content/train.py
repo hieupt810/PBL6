@@ -10,7 +10,9 @@ from tqdm import tqdm
 from transformers import ViTForImageClassification, ViTImageProcessor
 
 
-def load_datasets(transform: transforms.Compose, root: str = "/", batch_size: int = 32):
+def load_datasets(
+    transform: transforms.Compose, root: str = "/content", batch_size: int = 32
+):
     def load_dataset(folder: str, shuffle: bool = False):
         dir = os.path.join(root, "dataset", folder)
         dataset = ImageFolder(root=dir, transform=transform)
@@ -50,7 +52,7 @@ def load_model(name: str, checkpoint_dir: str = None):
     return model.to(device), transform, device
 
 
-root = "/content"
+root = os.path.abspath(os.path.dirname(__file__))
 checkpoints_dir = os.path.join(root, "checkpoints")
 os.makedirs(checkpoints_dir, exist_ok=True)
 
