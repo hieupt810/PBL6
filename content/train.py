@@ -50,7 +50,7 @@ def load_model(name: str, checkpoint_dir: str = None):
     return model.to(device), transform, device
 
 
-root = os.path.dirname(os.path.abspath(__file__))
+root = "/content"
 checkpoints_dir = os.path.join(root, "checkpoints")
 os.makedirs(checkpoints_dir, exist_ok=True)
 
