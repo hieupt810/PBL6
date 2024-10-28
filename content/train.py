@@ -2,6 +2,7 @@ import os
 
 import torch
 import torch.nn as nn
+import torch.optim as optim
 import torchvision.transforms as transforms
 from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
@@ -10,106 +11,140 @@ from tqdm import tqdm
 from transformers import ViTForImageClassification, ViTImageProcessor
 
 
-def load_datasets(
-    transform: transforms.Compose, root: str = "/content", batch_size: int = 32
-):
-    def load_dataset(folder: str, shuffle: bool = False):
-        dir = os.path.join(root, "dataset", folder)
-        dataset = ImageFolder(root=dir, transform=transform)
-        loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+class ViTImageModel:
+    epoch = 1
+    batch_size = 32
+    accuracies, losses = [], []
+    loss_fn = nn.CrossEntropyLoss()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    def __init__(self, model_name: str, path: str = "/content") -> None:
+        data_augmentation = transforms.Compose(
+            [
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomRotation(10),
+                transforms.ColorJitter(
+                    brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2
+                ),
+                transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
+            ]
+        )
+        self.root = os.path.join(path, "dataset")
+        self.model = ViTForImageClassification.from_pretrained(
+            model_name, local_files_only=True
+        )
+        self.processor = ViTImageProcessor.from_pretrained(model_name)
+        self.transform = transforms.Compose(
+            [
+                data_augmentation,
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=self.processor.image_mean, std=self.processor.image_std
+                ),
+            ]
+        )
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.0001)
+        self.scheduler = optim.lr_scheduler.StepLR(
+            self.optimizer, step_size=5, gamma=0.1
+        )
+
+    def load_dataset(self, folder: str, shuffle: bool = False):
+        dataset = ImageFolder(
+            root=os.path.join(self.root, folder), transform=self.transform
+        )
+        loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=shuffle)
         return loader
 
-    return load_dataset("train", shuffle=True), load_dataset("validate")
+    def load_datasets(self):
+        return self.load_dataset("train", shuffle=True), self.load_dataset("validate")
 
+    def load_checkpoint(self, filename: str):
+        path = os.path.join(self.root, "checkpoint", filename)
+        checkpoint = torch.load(path, map_location=self.device, weights_only=True)
 
-def load_model(name: str, checkpoint_dir: str = None):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = ViTForImageClassification.from_pretrained(name)
-    processor = ViTImageProcessor.from_pretrained(name)
-    data_augmentation = transforms.Compose(
-        [
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(10),
-            transforms.ColorJitter(
-                brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2
-            ),
-            transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
-        ]
-    )
-    transform = transforms.Compose(
-        [
-            data_augmentation,
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=processor.image_mean, std=processor.image_std),
-        ]
-    )
-    if checkpoint_dir:
-        model.load_state_dict(
-            torch.load(checkpoint_dir, map_location=device, weights_only=True)
-        )
+        self.epoch = checkpoint["epoch"]
+        self.losses.append(checkpoint["loss"])
+        self.accuracies.append(checkpoint["accuracy"])
+        self.model.load_state_dict(checkpoint["model_state_dict"])
+        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
 
-    return model.to(device), transform, device
+    def train(self, target_epoch: int):
+        train_loader, validate_loader = self.load_datasets()
+        for epoch in range(self.epoch, target_epoch + 1):
+            self.epoch = epoch
+            print(f"Epoch {epoch}/{target_epoch}")
+            self.losses.append(self.train_step(train_loader))
+            self.accuracies.append(self.validate(validate_loader))
 
+            print(f"- Loss      : {self.losses[-1]:.4f}")
+            print(f"- Accuracy  : {self.accuracies[-1]:.4f}%")
+            self.scheduler.step()
+            if self.losses[-1] < 0.5 and self.accuracies[-1] > 90.0:
+                self.save_checkpoint()
 
-root = os.path.abspath(os.path.dirname(__file__))
-checkpoints_dir = os.path.join(root, "checkpoints")
-os.makedirs(checkpoints_dir, exist_ok=True)
+    def train_step(self, dataloader: DataLoader):
+        self.model.train()
+        running_loss = 0.0
+        for images, labels in tqdm(dataloader, desc="- Training  "):
+            images, labels = images.to(self.device), labels.to(self.device)
+            self.optimizer.zero_grad()
+            outputs = self.model(images).logits
+            loss = self.loss_fn(outputs, labels)
+            loss.backward()
+            self.optimizer.step()
+            running_loss += loss.item()
 
-model, transform, device = load_model("google/vit-base-patch16-224")
-train_loader, validate_loader = load_datasets(root=root, transform=transform)
+        return running_loss / len(dataloader)
 
-epochs = 10
-loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+    def validate(self, dataloader: DataLoader, desc: str = "- Validating"):
+        self.model.eval()
+        correct, total = 0, 0
+        with torch.no_grad():
+            for images, labels in tqdm(dataloader, desc=desc):
+                images, labels = images.to(self.device), labels.to(self.device)
+                outputs = self.model(images).logits
+                _, predicted = torch.max(outputs, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
 
-losses, accuracies = [], []
-for epoch in range(epochs):
-    print(f"- Epoch {epoch + 1}/{epochs}")
+        return 100 * correct / total
 
-    # Training
-    model.train()
-    running_loss = 0.0
-    for images, labels in tqdm(train_loader, desc="Training"):
-        images, labels = images.to(device), labels.to(device)
-        optimizer.zero_grad()
-        outputs = model(images).logits
-        loss = loss_fn(outputs, labels)
-        loss.backward()
-        optimizer.step()
-        running_loss += loss.item()
+    def test(self):
+        test_loader = self.load_dataset("test")
+        print(f"Testing accuracy: {self.validate(test_loader, desc="Testing"):.4f}%")
 
-    # Validation
-    model.eval()
-    correct, total = 0, 0
-    with torch.no_grad():
-        for images, labels in tqdm(validate_loader, desc="Validating"):
-            images, labels = images.to(device), labels.to(device)
-            outputs = model(images).logits
-            _, predicted = torch.max(outputs, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-    print(
-        f"Loss: {running_loss / len(train_loader):.4f} | Accuracy: {100 * correct / total:.2f}%"
-    )
-    losses.append(running_loss / len(train_loader))
-    accuracies.append(100 * correct / total)
-    scheduler.step()
-
-    if losses[-1] < 1.0 and accuracies[-1] >= 90:
+    def save_checkpoint(self):
+        path = os.path.join(self.root, "checkpoint")
+        os.makedirs(path, exist_ok=True)
         torch.save(
-            model.state_dict(),
-            os.path.join(checkpoints_dir, f"checkpoint{epoch + 1}.pth"),
+            {
+                "epoch": self.epoch,
+                "loss": self.losses[-1],
+                "accuracy": self.accuracies[-1],
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "scheduler_state_dict": self.scheduler.state_dict(),
+            },
+            os.path.join(path, f"checkpoint{self.epoch}.pth"),
         )
 
-plt.plot(losses, label="Training loss")
-plt.xlabel("Epoch")
-plt.ylabel("Loss")
-plt.show()
+    def plot_metrics(self):
+        _, ax1 = plt.subplots()
+        ax2 = ax1.twinx()
+        ax1.plot(self.losses, color="r")
+        ax2.plot(self.accuracies, color="b")
+        ax1.set_xlabel("Epoch")
+        ax1.set_ylabel("Loss", color="r")
+        ax2.set_ylabel("Accuracy", color="b")
+        plt.show()
 
-plt.plot(accuracies, label="Validation accuracy")
-plt.xlabel("Epoch")
-plt.ylabel("Accuracy")
-plt.show()
+
+model = ViTImageModel(
+    model_name="google/vit-base-patch16-224",
+    path=os.path.abspath(os.path.dirname(__file__)),
+)
+model.train(5)
+model.plot_metrics()
+model.test()
