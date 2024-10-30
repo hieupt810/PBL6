@@ -18,7 +18,7 @@ class ViTImageModel:
     loss_fn = nn.CrossEntropyLoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def __init__(self, model_name: str, path: str = "/content") -> None:
+    def __init__(self, model_name: str, root: str = "/content") -> None:
         data_augmentation = transforms.Compose(
             [
                 transforms.RandomHorizontalFlip(),
@@ -29,7 +29,7 @@ class ViTImageModel:
                 transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
             ]
         )
-        self.root = os.path.join(path, "dataset")
+        self.root = root
         self.model = ViTForImageClassification.from_pretrained(
             model_name, local_files_only=True
         )
@@ -51,7 +51,7 @@ class ViTImageModel:
 
     def load_dataset(self, folder: str, shuffle: bool = False):
         dataset = ImageFolder(
-            root=os.path.join(self.root, folder), transform=self.transform
+            root=os.path.join(self.root, "dataset", folder), transform=self.transform
         )
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=shuffle)
         return loader
@@ -116,8 +116,13 @@ class ViTImageModel:
         print(f"Testing accuracy: {self.validate(test_loader, desc="Testing"):.4f}%")
 
     def save_checkpoint(self):
-        path = os.path.join(self.root, "checkpoint")
+        path = os.path.join(self.root, "checkpoints")
         os.makedirs(path, exist_ok=True)
+
+        path = os.path.join(path, f"checkpoint{self.epoch}.pth")
+        if os.path.exists(path):
+            os.remove(path)
+
         torch.save(
             {
                 "epoch": self.epoch,
@@ -127,7 +132,7 @@ class ViTImageModel:
                 "optimizer_state_dict": self.optimizer.state_dict(),
                 "scheduler_state_dict": self.scheduler.state_dict(),
             },
-            os.path.join(path, f"checkpoint{self.epoch}.pth"),
+            path,
         )
 
     def plot_metrics(self):
@@ -143,7 +148,7 @@ class ViTImageModel:
 
 model = ViTImageModel(
     model_name="google/vit-base-patch16-224",
-    path=os.path.abspath(os.path.dirname(__file__)),
+    root=os.path.abspath(os.path.dirname(__file__)),
 )
 model.train(5)
 model.plot_metrics()

@@ -6,14 +6,14 @@ The numbers in parentheses represent the quantity of images used for training, t
 
 | Product name | Training | Validation | Testing |
 | ------------ | -------: | ---------: | ------: |
-| Fan          |       10 |          3 |       0 |
-| Keyboard     |       10 |          3 |       0 |
-| Monitor      |       10 |          3 |       0 |
-| Mouse        |       10 |          3 |       0 |
-| PC           |       10 |          3 |       0 |
+| Fan          |       10 |          3 |       5 |
+| Keyboard     |       10 |          3 |       5 |
+| Monitor      |       10 |          3 |       5 |
+| Mouse        |       10 |          3 |       5 |
+| PC           |       10 |          3 |       5 |
 | Phone        |       10 |          3 |       5 |
-| Speaker      |       10 |          3 |       0 |
-| Television   |       10 |          3 |       0 |
+| Speaker      |       10 |          3 |       5 |
+| Television   |       10 |          3 |       5 |
 | Smartwatch   |        0 |          0 |       0 |
 | Camera       |        0 |          0 |       0 |
 | Printer      |        0 |          0 |       0 |
