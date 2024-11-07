@@ -77,30 +77,30 @@
 | Name            | Number of Train Images | Number of Test Images |
 | :-------------- | ---------------------: | --------------------: |
 | Blender         |                     20 |                    20 |
-| Dishwasher      |                      0 |                     0 |
-| Microwave       |                      0 |                     0 |
-| Refrigerator    |                      0 |                     0 |
-| Washing Machine |                      0 |                     0 |
+| Dishwasher      |                     20 |                    20 |
+| Microwave       |                     20 |                    20 |
+| Refrigerator    |                     20 |                    20 |
+| Washing Machine |                     20 |                    20 |
 
 ### Kitchenware
 
 | Name          | Number of Train Images | Number of Test Images |
 | :------------ | ---------------------: | --------------------: |
 | Cutting Board |                     20 |                    20 |
-| Frying Pan    |                      0 |                     0 |
-| Knife         |                      0 |                     0 |
-| Mixing Bowl   |                      0 |                     0 |
-| Spatula       |                      0 |                     0 |
+| Frying Pan    |                     20 |                    20 |
+| Knife         |                     20 |                    20 |
+| Mixing Bowl   |                     20 |                    20 |
+| Spatula       |                     20 |                     0 |
 
 ### Musical Instruments
 
 | Name    | Number of Train Images | Number of Test Images |
 | :------ | ---------------------: | --------------------: |
 | Drum    |                     20 |                    20 |
-| Guitar  |                      0 |                     0 |
-| Piano   |                      0 |                     0 |
-| Trumpet |                      0 |                     0 |
-| Violin  |                      0 |                     0 |
+| Guitar  |                     20 |                    20 |
+| Piano   |                     20 |                    20 |
+| Trumpet |                     20 |                    20 |
+| Violin  |                     20 |                    20 |
 
 ### Toys
 
