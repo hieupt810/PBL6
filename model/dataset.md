@@ -64,13 +64,18 @@
 
 ### Furniture
 
-| Name      | Number of Train Images | Number of Test Images |
-| :-------- | ---------------------: | --------------------: |
-| Armchair  |                     20 |                    20 |
-| Bed       |                      0 |                     0 |
-| Bookshelf |                      0 |                     0 |
-| Chair     |                      0 |                     0 |
-| Sofa      |                      0 |                     0 |
+| Name         | Number of Train Images | Number of Test Images |
+| :----------- | ---------------------: | --------------------: |
+| Armchair     |                     20 |                    20 |
+| Bed          |                     20 |                    20 |
+| Bookshelf    |                     20 |                    20 |
+| Chair        |                     40 |                    40 |
+| Coffee Table |                      0 |                     0 |
+| Desk         |                      0 |                     0 |
+| Dresser      |                      0 |                     0 |
+| Nightstand   |                      0 |                     0 |
+| Sofa         |                     20 |                    20 |
+| Wardrobe     |                      0 |                     0 |
 
 ### Home Appliances
 
