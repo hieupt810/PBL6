@@ -1,7 +1,5 @@
 # Dataset Categories
 
-**Copilot Command:** Create a table with the columns: "Name," "Number of Train Images," and "Number of Test Images." Populate the "Name" column with at least 5 unique product names, listed in alphabetical order. Set both "Number of Train Images" and "Number of Test Images" columns to 0 for all entries.
-
 ## List of categories
 
 1. Beauty Products
@@ -70,12 +68,12 @@
 | Bed          |                     20 |                    20 |
 | Bookshelf    |                     20 |                    20 |
 | Chair        |                     40 |                    40 |
-| Coffee Table |                      0 |                     0 |
-| Desk         |                      0 |                     0 |
-| Dresser      |                      0 |                     0 |
-| Nightstand   |                      0 |                     0 |
+| Coffee Table |                     20 |                    20 |
+| Desk         |                     20 |                    20 |
+| Dresser      |                     20 |                    20 |
+| Nightstand   |                     20 |                    20 |
 | Sofa         |                     20 |                    20 |
-| Wardrobe     |                      0 |                     0 |
+| Wardrobe     |                     20 |                    20 |
 
 ### Home Appliances
 
@@ -95,7 +93,12 @@
 | Frying Pan    |                     20 |                    20 |
 | Knife         |                     20 |                    20 |
 | Mixing Bowl   |                     20 |                    20 |
-| Spatula       |                     20 |                     0 |
+| Spatula       |                     20 |                    20 |
+| Baking Sheet  |                      0 |                     0 |
+| Colander      |                      0 |                     0 |
+| Measuring Cup |                      0 |                     0 |
+| Rolling Pin   |                      0 |                     0 |
+| Whisk         |                      0 |                     0 |
 
 ### Musical Instruments
 
