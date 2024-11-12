@@ -94,10 +94,10 @@
 | Knife         |                     20 |                    20 |
 | Mixing Bowl   |                     20 |                    20 |
 | Spatula       |                     20 |                    20 |
-| Baking Sheet  |                      0 |                     0 |
-| Colander      |                      0 |                     0 |
-| Measuring Cup |                      0 |                     0 |
-| Rolling Pin   |                      0 |                     0 |
+| Baking Sheet  |                     20 |                    20 |
+| Colander      |                     20 |                    20 |
+| Measuring Cup |                     20 |                    20 |
+| Rolling Pin   |                     20 |                    20 |
 | Whisk         |                      0 |                     0 |
 
 ### Musical Instruments
