@@ -82,6 +82,10 @@ class Settings(BaseSettings):
     def SELENIUM_URL(self) -> str:
         return f"http://{self.SELENIUM_HOST}:{self.SELENIUM_PORT}/wd/hub"
 
+    # Cron
+    CRON_HOUR: str = "*"
+    CRON_MINUTE: str = "*/2"
+
     @model_validator(mode="after")
     def _enforce_non_default_secrets(self) -> Self:
         self._check_default_secret("SECRET_KEY", self.SECRET_KEY)
