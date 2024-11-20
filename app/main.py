@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
         "cron",
         hour=settings.CRON_HOUR,
         minute=settings.CRON_MINUTE,
-        jitter=60,
+        jitter=120,
         id="crawl_products",
     )
     scheduler.start()
