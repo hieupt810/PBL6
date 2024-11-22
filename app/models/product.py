@@ -12,8 +12,8 @@ class Product(SQLModel, table=True):
     id: UUID = Field(default_factory=lambda: uuid4(), primary_key=True, index=True)
     title: str = Field()
     price: str = Field(nullable=False)
-    image_href: str | None = Field(default=None, nullable=True)
-    shopping_href: str = Field(nullable=False)
+    image_url: str | None = Field(default=None, nullable=True)
+    url: str = Field(nullable=False)
     created_at: datetime = Field(default_factory=lambda: datetime.now(), nullable=False)
     updated_at: datetime = Field(default_factory=lambda: datetime.now(), nullable=False)
 

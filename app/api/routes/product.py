@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter
@@ -7,13 +6,13 @@ from sqlalchemy import func
 from sqlmodel import select
 
 from app.api.deps import SessionDep
+from app.logger import get_logger
 from app.models.pagination import Pagination
 from app.models.product import Product, ProductsPublic
 
 router = APIRouter()
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @router.get("", response_model=ProductsPublic)

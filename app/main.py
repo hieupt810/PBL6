@@ -1,4 +1,3 @@
-import logging
 from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -9,10 +8,11 @@ from sqlmodel import Session
 from app.api.main import api_router
 from app.core.config import settings
 from app.core.db import engine, init_db
+from app.logger import get_logger
 from app.tasks.alibaba import crawl_alibaba
+from app.tasks.cleaner import product_cleaner
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
@@ -23,11 +23,12 @@ async def lifespan(app: FastAPI):
         "cron",
         hour=settings.CRON_HOUR,
         minute=settings.CRON_MINUTE,
-        jitter=120,
         id="crawl_products",
     )
+    scheduler.add_job(product_cleaner, "cron", hour=0, minute=0, id="clean_products")
     scheduler.start()
     try:
+        logger.info("Scheduler started.")
         yield
     finally:
         scheduler.shutdown()
