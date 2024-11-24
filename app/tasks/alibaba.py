@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 def crawl_product(driver: Driver, index: int) -> None:
     url = driver.get_attribute(f".hugo4-pc-grid-item:nth-child({index + 1}) a", "href")
     if not url:
-        raise Exception("Error to find product URL.")
+        raise Exception("Error to find product URL")
 
     try:
         driver.open_link(url)
@@ -27,7 +27,7 @@ def crawl_product(driver: Driver, index: int) -> None:
             session.commit()
     except Exception as e:
         logger.error(e)
-        raise Exception("Error while crawling product.")
+        raise Exception("Error while crawling product")
     finally:
         driver.close_current_tab()
 
