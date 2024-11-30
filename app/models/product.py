@@ -14,6 +14,9 @@ class Product(SQLModel, table=True):
     price: str = Field(nullable=False)
     image_url: str | None = Field(default=None, nullable=True)
     url: str = Field(nullable=False)
+
+    category_id: UUID | None = Field(foreign_key="constants.id")
+
     created_at: datetime = Field(default_factory=lambda: datetime.now(), nullable=False)
     updated_at: datetime = Field(default_factory=lambda: datetime.now(), nullable=False)
 

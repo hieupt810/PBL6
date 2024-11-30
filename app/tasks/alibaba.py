@@ -1,4 +1,4 @@
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.core.crawler import Driver
 from app.core.db import engine
@@ -21,8 +21,12 @@ def crawl_product(driver: Driver, index: int) -> None:
             ".id-absolute.id-bottom-0.id-left-0.id-right-0.id-top-0.id-bg-black.id-opacity-5:nth-child(2)"
         )
         image = driver.get_attribute(".id-relative.id-h-full.id-w-full img", "src")
-        product = Product(title=title, price=price, image_url=image, url=url)
         with Session(engine) as session:
+            stmt = select(Product).where(Product.title == title)
+            if session.exec(stmt).first():
+                return
+
+            product = Product(title=title, price=price, image_url=image, url=url)
             session.add(product)
             session.commit()
     except Exception as e:
