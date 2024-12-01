@@ -11,14 +11,15 @@ logger = get_logger(__name__)
 
 def product_cleaner():
     with Session(engine) as session:
-        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        thirty_days_ago = datetime.combine(
+            datetime.now(timezone.utc) - timedelta(days=30), datetime.min.time()
+        )
         products = session.exec(
             select(Product).filter(Product.created_at < thirty_days_ago)
         )
         for product in products:
             try:
                 session.delete(product)
+                session.commit()
             except Exception:
                 logger.error(f"Error while deleting product {product.id}")
-
-        session.commit()

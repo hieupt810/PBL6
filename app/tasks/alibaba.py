@@ -1,3 +1,7 @@
+from pathlib import Path
+from uuid import uuid4
+
+import requests
 from sqlmodel import Session, select
 
 from app.core.crawler import Driver
@@ -15,22 +19,28 @@ def crawl_product(driver: Driver, index: int) -> None:
 
     try:
         driver.open_link(url)
-        title = driver.get_text(".product-title-container > h1")
+        name = driver.get_text(".product-title-container > h1")
         price = driver.get_text(".product-price .price")
         driver.click_button(
             ".id-absolute.id-bottom-0.id-left-0.id-right-0.id-top-0.id-bg-black.id-opacity-5:nth-child(2)"
         )
         image = driver.get_attribute(".id-relative.id-h-full.id-w-full img", "src")
         with Session(engine) as session:
-            stmt = select(Product).where(Product.title == title)
+            stmt = select(Product).where(Product.name == name)
             if session.exec(stmt).first():
                 return
 
-            product = Product(title=title, price=price, image_url=image, url=url)
+            # Download the image from url
+            image_data = requests.get(image).content
+            image_path = Path(f"app/images/{uuid4()}.jpg")
+            image_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(image_path, "wb") as f:
+                f.write(image_data)
+
+            product = Product(name=name, price=price, image=image, base=url)
             session.add(product)
             session.commit()
-    except Exception as e:
-        logger.error(e)
+    except Exception:
         raise Exception("Error while crawling product")
     finally:
         driver.close_current_tab()
@@ -46,7 +56,7 @@ def crawl_alibaba():
         )
         driver.scroll_to_bottom()
 
-        for i in range(5):
+        for i in range(3):
             driver.click_link(
                 f".hugo4-pc-grid .hugo4-pc-grid-item:nth-child({i + 1}) a"
             )

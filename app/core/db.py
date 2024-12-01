@@ -4,6 +4,7 @@ from sqlmodel import Session, SQLModel, select
 from app.core.config import settings
 from app.models.constant import Constant
 from app.models.product import Product
+from app.tasks.alibaba import crawl_alibaba
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -20,7 +21,7 @@ CATEGORIES = [
     "Toys",
 ]
 
-TIME_RANGES = ["Last 24 hours", "Last 7 days", "Last 14 days", "Last 30 days"]
+TIME_RANGES = ["1", "3", "7", "14", "30"]
 
 
 def init_db(session: Session) -> None:
@@ -38,3 +39,4 @@ def init_db(session: Session) -> None:
         session.commit()
 
     session.exec(select(Product)).first()
+    crawl_alibaba()

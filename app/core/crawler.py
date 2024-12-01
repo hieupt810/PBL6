@@ -33,10 +33,8 @@ class Driver:
         try:
             self._driver.get(url)
             time.sleep(self._load_wait)
-
             logger.info(f"Successfully got URL: {url}")
-        except Exception as e:
-            logger.error(e)
+        except Exception:
             raise Exception(f"Failed to get URL: {url}")
 
     def close_current_tab(self) -> None:
@@ -44,10 +42,8 @@ class Driver:
             self._driver.close()
             self._driver.switch_to.window(self._driver.window_handles[-1])
             time.sleep(self._action_wait)
-
             logger.info("Successfully closed current tab")
         except Exception as e:
-            logger.error(e)
             raise Exception("Failed to close current tab")
 
     def open_link(self, url: str) -> None:
@@ -55,18 +51,15 @@ class Driver:
             self._driver.execute_script(f"window.open('{url}', '_blank');")
             self._driver.switch_to.window(self._driver.window_handles[-1])
             time.sleep(self._load_wait)
-
             logger.info(f"Succesfully opened link: {url}")
-        except Exception as e:
-            logger.error(e)
+        except Exception:
             raise Exception(f"Failed to open link in new tab: {url}")
 
     def quit(self) -> None:
         try:
             self._driver.quit()
             logger.info("Successfully closed browser")
-        except Exception as e:
-            logger.error(e)
+        except Exception:
             logger.error("Failed to close browser")
 
     def scroll_to_bottom(self) -> None:
@@ -76,15 +69,13 @@ class Driver:
             )
             time.sleep(self._action_wait)
             logger.info("Successfully scrolled to the bottom of the page")
-        except Exception as e:
-            logger.error(e)
+        except Exception:
             raise Exception("Failed to scroll to the bottom of the page")
 
     def click_link(self, selector: str) -> None:
         try:
             self.open_link(self.get_attribute(selector, "href"))
-        except Exception as e:
-            logger.error(e)
+        except Exception:
             raise Exception("Failed to click link")
 
     def click_button(self, selector: str) -> None:
@@ -92,8 +83,7 @@ class Driver:
             self._driver.find_element(By.CSS_SELECTOR, selector).click()
             time.sleep(self._action_wait)
             logger.info("Successfully clicked button")
-        except Exception as e:
-            logger.error(e)
+        except Exception:
             raise Exception("Failed to click button")
 
     def get_attribute(self, selector: str, attribute: str) -> str:
@@ -106,8 +96,7 @@ class Driver:
     def get_text(self, selector: str) -> str:
         try:
             return self._driver.find_element(By.CSS_SELECTOR, selector).text
-        except Exception as e:
-            logger.error(e)
+        except Exception:
             raise Exception("Failed to get text from element")
 
     def find_elements(self, selector: str) -> list[WebElement]:
@@ -116,6 +105,5 @@ class Driver:
             elements = self._driver.find_elements(By.CSS_SELECTOR, selector)
             logger.info(f"Successfully found {len(elements)} elements")
             return elements
-        except Exception as e:
-            logger.error(e)
+        except Exception:
             raise Exception("Failed to find elements")

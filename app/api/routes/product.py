@@ -1,57 +1,71 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter
-from pydantic import ValidationError
 from sqlalchemy import func
 from sqlmodel import select
 
 from app.api.deps import SessionDep
 from app.logger import get_logger
+from app.models.constant import Constant
 from app.models.pagination import Pagination
-from app.models.product import Product, ProductsPublic
-
-router = APIRouter()
+from app.models.product import Product, ProductListPublic
 
 logger = get_logger(__name__)
+router = APIRouter()
 
 
-@router.get("", response_model=ProductsPublic)
+def get_constant_by_type(session: SessionDep, type: int):
+    stmt = (
+        select(Constant)
+        .where(Constant.type == type)
+        .order_by(Constant.created_at)
+        .limit(1)
+    )
+    result = session.exec(stmt).first()
+    return result
+
+
+@router.get("", response_model=ProductListPublic)
 async def read_products_list(
-    session: SessionDep, page: int = 1, size: int = 10
-) -> ProductsPublic:
-    page = max(1, page)
-    if size < 1:
-        size = 10
+    session: SessionDep,
+    category: str = None,
+    time: str = None,
+    page: int = 1,
+    size: int = 10,
+) -> ProductListPublic:
+    days = 1
+    if not time:
+        obj = get_constant_by_type(session, 1)
 
-    # Count the total number of products
-    count_stmt = select(func.count()).select_from(Product)
-    count = session.exec(count_stmt).one()
+        time = obj.id
+        days = int(obj.name)
 
-    today = datetime.now(timezone.utc).date()
-    start_of_today = datetime.combine(today, datetime.min.time())
-    end_of_today = datetime.combine(today, datetime.max.time())
+    page = 1 if page < 1 else page
+    size = 10 if size < 1 else size
+    date = datetime.combine(
+        datetime.now(timezone.utc) - timedelta(days=days), datetime.min.time()
+    )
 
-    # Get the products for the current page
+    # Get products
     stmt = (
         select(Product)
-        .where(Product.created_at.between(start_of_today, end_of_today))
-        .order_by(Product.created_at.desc())
-        .offset((page - 1) * size)
+        .where(Product.updated_at >= date)
+        .order_by(Product.updated_at.desc())
         .limit(size)
+        .offset((page - 1) * size)
     )
-    products = session.exec(stmt).all()
+    result = session.exec(stmt).all()
 
-    # Create a pagination object
-    total_pages = count // size + 1 if count % size else count // size
-    try:
-        pagination = Pagination(
-            total_records=count,
-            current_page=page,
-            total_pages=total_pages,
-            next_page=page + 1 if page < total_pages else None,
-            previous_page=page - 1 if page > 1 else None,
-        )
-    except ValidationError as e:
-        raise e
+    # Pagination
+    stmt = select(func.count()).select_from(Product).where(Product.updated_at >= date)
+    total_records = session.exec(stmt).one()
+    total_pages = (total_records + size - 1) // size
+    pagination = Pagination(
+        total_records=total_records,
+        total_pages=total_pages,
+        current=page,
+        next=page + 1 if page < total_pages else None,
+        prev=page - 1 if page > 1 else None,
+    )
 
-    return ProductsPublic(data=products, pagination=pagination)
+    return ProductListPublic(data=result, pagination=pagination)

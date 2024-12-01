@@ -1,10 +1,9 @@
-from pydantic import BaseModel, model_validator
-from typing_extensions import Self
+from pydantic import BaseModel
 
 
 class Pagination(BaseModel):
     total_records: int
-    current_page: int
     total_pages: int
-    next_page: int | None
-    previous_page: int | None
+    current: int
+    next: int | None
+    prev: int | None
