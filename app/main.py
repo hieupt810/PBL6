@@ -10,7 +10,7 @@ from app.core.config import settings
 from app.core.db import engine, init_db
 from app.logger import get_logger
 from app.tasks.alibaba import crawl_alibaba
-from app.tasks.cleaner import product_cleaner
+from app.tasks.cleaner import products_cleaner
 
 logger = get_logger(__name__)
 
@@ -23,11 +23,11 @@ async def lifespan(app: FastAPI):
         "cron",
         hour=settings.CRON_HOUR,
         minute=settings.CRON_MINUTE,
-        id="crawl_products",
+        id="alibaba",
     )
-    scheduler.add_job(product_cleaner, "cron", hour=0, minute=0, id="clean_products")
-    scheduler.start()
+    scheduler.add_job(products_cleaner, "cron", hour=0, minute=0, id="products_cleaner")
     try:
+        scheduler.start()
         logger.info("Scheduler started.")
         yield
     finally:

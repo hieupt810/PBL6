@@ -4,7 +4,6 @@ from sqlmodel import Session, SQLModel, select
 from app.core.config import settings
 from app.models.constant import Constant
 from app.models.product import Product
-from app.tasks.alibaba import crawl_alibaba
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -39,4 +38,3 @@ def init_db(session: Session) -> None:
         session.commit()
 
     session.exec(select(Product)).first()
-    crawl_alibaba()

@@ -1,13 +1,11 @@
-import numpy as np
 import torch
 import torch.nn as nn
 from PIL import Image
-from transformers import ViTForImageClassification
+from torchvision import transforms
+from transformers import ViTForImageClassification, ViTImageProcessor
 
 
-def load_trained_model(num_classes: int = 10):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+def load_trained_model(num_classes: int, device: torch.device):
     # Load the pre-trained ViT model and replace the head classifier
     model = ViTForImageClassification.from_pretrained("google/vit-base-patch16-224").to(
         device
@@ -22,27 +20,30 @@ def load_trained_model(num_classes: int = 10):
         nn.Linear(in_features=256, out_features=num_classes, bias=False),
     )
 
+    # Load the image processor
+    processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224")
+    transform = transforms.Compose(
+        [
+            transforms.Resize(size=(224, 224), antialias=True),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=processor.image_mean, std=processor.image_std),
+        ]
+    )
+
     # Load the trained weights
     checkpoint = torch.load("app/model.pt", map_location=device, weights_only=True)
-    model.load_state_dict(checkpoint["model"])
+    model.load_state_dict(checkpoint["model_state_dict"])
 
-    return model
+    return model, transform
 
 
-def predict(image_path: str):
-    model = load_trained_model()
+def predict(path: str):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model, transform = load_trained_model(num_classes=10, device=device)
     model.eval()
 
-    # Load and preprocess the image
-    image = Image.open(image_path)
-    image = image.resize((224, 224))
-    image = np.array(image) / 255.0
-    image = np.transpose(image, (2, 0, 1))
-    image = torch.tensor(image, dtype=torch.float).unsqueeze(0)
+    image = transform(Image.open(path)).unsqueeze(0).to(device)
+    outputs = model(image).logits
+    _, predicted = torch.max(outputs, 1)
 
-    # Make a prediction
-    with torch.no_grad():
-        logits = model(image)["logits"]
-        probabilities = torch.softmax(logits, dim=-1).squeeze(0)
-
-    return probabilities
+    return predicted.item()

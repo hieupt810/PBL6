@@ -9,7 +9,7 @@ from app.models.product import Product
 logger = get_logger(__name__)
 
 
-def product_cleaner():
+def products_cleaner():
     with Session(engine) as session:
         thirty_days_ago = datetime.combine(
             datetime.now(timezone.utc) - timedelta(days=30), datetime.min.time()
@@ -22,4 +22,4 @@ def product_cleaner():
                 session.delete(product)
                 session.commit()
             except Exception:
-                logger.error(f"Error while deleting product {product.id}")
+                continue
