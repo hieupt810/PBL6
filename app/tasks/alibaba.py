@@ -25,6 +25,9 @@ def crawl_product(driver: Driver, index: int) -> None:
             ".id-absolute.id-bottom-0.id-left-0.id-right-0.id-top-0.id-bg-black.id-opacity-5:nth-child(2)"
         )
         image = driver.get_attribute(".id-relative.id-h-full.id-w-full img", "src")
+        description_html = driver.get_html(".module_attribute > .attribute-layout > .attribute-info")
+        description = str(description_html)
+
         with Session(engine) as session:
             stmt = select(Product).where(Product.name == name)
             if session.exec(stmt).first():
@@ -36,10 +39,15 @@ def crawl_product(driver: Driver, index: int) -> None:
             image_path.parent.mkdir(parents=True, exist_ok=True)
             with open(image_path, "wb") as f:
                 f.write(image_data)
+            print("Description: " + description)
+            product = Product(name=name, price=price, image=image, base=url, description = description)
 
-            product = Product(name=name, price=price, image=image, base=url)
+            # product = Product(name=name, price=price, image=image, base=url)
+
             session.add(product)
             session.commit()
+            print("Added product to database")
+
     except Exception:
         raise Exception("Error while crawling product")
     finally:

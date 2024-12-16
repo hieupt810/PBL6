@@ -14,6 +14,7 @@ class ProductPublic(SQLModel):
     price: str = Field(nullable=False)
     image: str | None = Field(default=None, nullable=True)
     base: str = Field(nullable=False)
+    description: str = Field(nullable=False)
 
 
 class Product(ProductPublic, table=True):
