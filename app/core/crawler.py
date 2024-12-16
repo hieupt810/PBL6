@@ -99,6 +99,13 @@ class Driver:
         except Exception:
             raise Exception("Failed to get text from element")
 
+    def get_html(self, selector: str) -> str:
+        try:
+            element = self._driver.find_element(By.CSS_SELECTOR, selector)
+            return element.get_attribute('outerHTML')
+        except Exception:
+            raise Exception("Failed to get HTML from element")
+
     def find_elements(self, selector: str) -> list[WebElement]:
         self.scroll_to_bottom()
         try:
