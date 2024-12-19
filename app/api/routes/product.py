@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta, timezone
+from fastapi import HTTPException
+from uuid import UUID
 
 from fastapi import APIRouter
 from sqlalchemy import func
@@ -69,3 +71,10 @@ async def read_products_list(
     )
 
     return ProductListPublic(data=result, pagination=pagination)
+
+@router.get("/detail/{product_id}", response_model=Product)
+async def read_product_detail(product_id: UUID, session: SessionDep) -> Product:
+    product = session.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
