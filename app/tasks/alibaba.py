@@ -8,6 +8,7 @@ from app.core.crawler import Driver
 from app.core.db import engine
 from app.logger import get_logger
 from app.models.product import Product
+import json
 
 logger = get_logger(__name__)
 
@@ -30,7 +31,7 @@ def extract_attributes(html):
                      key = left_div.text.strip()
                      value = right_div.find('span').text.strip()
                      attribute_data[category][key] = value
-    return attribute_data
+    return json.dumps(attribute_data)
 
 def crawl_product(driver: Driver, index: int) -> None:
     url = driver.get_attribute(f".hugo4-pc-grid-item:nth-child({index + 1}) a", "href")
