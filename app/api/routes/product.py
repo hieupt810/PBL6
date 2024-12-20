@@ -72,7 +72,7 @@ async def read_products_list(
 
     return ProductListPublic(data=result, pagination=pagination)
 
-@router.get("/detail/{product_id}", response_model=Product)
+@router.get("/{product_id}", response_model=Product)
 async def read_product_detail(product_id: UUID, session: SessionDep) -> Product:
     product = session.get(Product, product_id)
     if not product:
