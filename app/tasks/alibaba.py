@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import requests
 from sqlmodel import Session, select
-
+from bs4 import BeautifulSoup
 from app.core.crawler import Driver
 from app.core.db import engine
 from app.logger import get_logger
@@ -11,6 +11,26 @@ from app.models.product import Product
 
 logger = get_logger(__name__)
 
+
+def extract_attributes(html):
+    soup = BeautifulSoup(html, 'html.parser')
+
+    attribute_data = {}
+
+    for heading in soup.find_all('h3'):
+        category = heading.text.strip()
+        attribute_data[category] = {}
+
+        attribute_list = heading.find_next_sibling('div', class_='attribute-list')
+        if attribute_list:
+            for item in attribute_list.find_all('div', class_='attribute-item'):
+                left_div = item.find('div', class_='left')
+                right_div = item.find('div', class_='right')
+                if left_div and right_div:
+                     key = left_div.text.strip()
+                     value = right_div.find('span').text.strip()
+                     attribute_data[category][key] = value
+    return attribute_data
 
 def crawl_product(driver: Driver, index: int) -> None:
     url = driver.get_attribute(f".hugo4-pc-grid-item:nth-child({index + 1}) a", "href")
@@ -26,7 +46,7 @@ def crawl_product(driver: Driver, index: int) -> None:
         )
         image = driver.get_attribute(".id-relative.id-h-full.id-w-full img", "src")
         description_html = driver.get_html(".module_attribute > .attribute-layout > .attribute-info")
-        description = str(description_html)
+        description = str(extract_attributes(description_html))
 
         with Session(engine) as session:
             stmt = select(Product).where(Product.name == name)
