@@ -1,49 +1,67 @@
+import timm
 import torch
-import torch.nn as nn
 from PIL import Image
 from torchvision import transforms
-from transformers import ViTForImageClassification, ViTImageProcessor
+from torchvision.models import ResNet101_Weights, resnet101
+
+CLASSES = [
+    "beauty_products",
+    "electronics",
+    "fashion",
+    "fitness_equipments",
+    "furniture",
+    "home_appliances",
+    "kitchenware",
+    "musical_instruments",
+    "study_things",
+    "toys",
+]
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def load_trained_model(num_classes: int, device: torch.device):
-    # Load the pre-trained ViT model and replace the head classifier
-    model = ViTForImageClassification.from_pretrained("google/vit-base-patch16-224").to(
-        device
-    )
-    model.classifier = nn.Sequential(
-        nn.Linear(in_features=768, out_features=512),
-        nn.ReLU(),
-        nn.Dropout(p=0.2),
-        nn.Linear(in_features=512, out_features=256),
-        nn.ReLU(),
-        nn.Dropout(p=0.2),
-        nn.Linear(in_features=256, out_features=num_classes, bias=False),
-    )
+def predict_ResNet(image):
+    model = resnet101(weights=ResNet101_Weights.DEFAULT)
+    model.fc = torch.nn.Linear(model.fc.in_features, 10)
+    model = model.to(device).eval()
 
-    # Load the image processor
-    processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224")
-    transform = transforms.Compose(
+    weights = torch.load("", map_location=device, weights_only=True)
+    model.load_state_dict(weights["model"])
+
+    preprocess = transforms.Compose(
         [
-            transforms.Resize(size=(224, 224), antialias=True),
+            transforms.Resize((224, 224), antialias=True),
             transforms.ToTensor(),
-            transforms.Normalize(mean=processor.image_mean, std=processor.image_std),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
+    image = Image.open(image)
+    batch = preprocess(image).unsqueeze(0).to(device)
+    with torch.inference_mode():
+        output = model(batch)
 
-    # Load the trained weights
-    checkpoint = torch.load("app/model.pt", map_location=device, weights_only=True)
-    model.load_state_dict(checkpoint["model_state_dict"])
-
-    return model, transform
+    probs = torch.nn.functional.softmax(output[0], dim=0)
+    return CLASSES[probs.argmax().item()], probs.max().item()
 
 
-def predict(path: str):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model, transform = load_trained_model(num_classes=10, device=device)
-    model.eval()
+def predict_ViT(image):
+    model = timm.create_model("vit_base_patch16_224.augreg_in21k", pretrained=True)
+    model.head = torch.nn.Linear(model.head.in_features, 10)
+    model = model.to(device).eval()
 
-    image = transform(Image.open(path)).unsqueeze(0).to(device)
-    outputs = model(image).logits
-    _, predicted = torch.max(outputs, 1)
+    weights = torch.load("", map_location=device, weights_only=True)
+    model.load_state_dict(weights)
 
-    return predicted.item()
+    preprocess = transforms.Compose(
+        [
+            transforms.Resize((224, 224), antialias=True),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
+    image = Image.open(image)
+    batch = preprocess(image).unsqueeze(0).to(device)
+    with torch.inference_mode():
+        output = model(batch)
+
+    probs = torch.nn.functional.softmax(output[0], dim=0)
+    return CLASSES[probs.argmax().item()], probs.max().item()

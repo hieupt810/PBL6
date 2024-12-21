@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta, timezone
-from fastapi import HTTPException
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import func
 from sqlmodel import select
 
@@ -71,6 +70,7 @@ async def read_products_list(
     )
 
     return ProductListPublic(data=result, pagination=pagination)
+
 
 @router.get("/{product_id}", response_model=Product)
 async def read_product_detail(product_id: UUID, session: SessionDep) -> Product:

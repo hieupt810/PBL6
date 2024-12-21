@@ -102,7 +102,7 @@ class Driver:
     def get_html(self, selector: str) -> str:
         try:
             element = self._driver.find_element(By.CSS_SELECTOR, selector)
-            return element.get_attribute('outerHTML')
+            return element.get_attribute("outerHTML")
         except Exception:
             raise Exception("Failed to get HTML from element")
 
