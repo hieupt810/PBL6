@@ -83,3 +83,7 @@ websocket-client==1.8.0
 websockets==13.1
 wheel==0.44.0
 wsproto==1.2.0
+beautifulsoup4==4.12.3
+pytest
+httpx
+pytest-cov
