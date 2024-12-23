@@ -38,10 +38,10 @@ class Driver:
         try:
             self._driver.close()
             self._driver.switch_to.window(self._driver.window_handles[-1])
-            time.sleep(self.action)
-            print("Closed current tab.")
-        except Exception:
-            raise Exception("Failed to close current tab")
+            time.sleep(self._action_wait)
+            logger.info("Successfully closed current tab")
+        except Exception as e:
+            raise Exception("Failed to close current tab: " + e)
 
     def open_link(self, url: str) -> None:
         try:
@@ -72,36 +72,36 @@ class Driver:
     def click_link(self, selector: str) -> None:
         try:
             self.open_link(self.get_attribute(selector, "href"))
-        except Exception:
-            raise Exception("Failed to click link.")
+        except Exception as e:
+            raise Exception("Failed to click link: " + e)
 
     def click_button(self, selector: str) -> None:
         try:
             self._driver.find_element(By.CSS_SELECTOR, selector).click()
-            time.sleep(self.action)
-            print("Clicked button.")
-        except Exception:
-            raise Exception("Failed to click button.")
+            time.sleep(self._action_wait)
+            logger.info("Successfully clicked button")
+        except Exception as e:
+            raise Exception("Failed to click button: " + e)
 
     def get_attribute(self, selector: str, attribute: str) -> str:
         try:
             element = self._driver.find_element(By.CSS_SELECTOR, selector)
             return element.get_attribute(attribute)
-        except Exception:
-            raise Exception("Failed to get attribute from element.")
+        except Exception as e:
+            raise Exception("Failed to get attribute from element: " + e)
 
     def get_text(self, selector: str) -> str:
         try:
             return self._driver.find_element(By.CSS_SELECTOR, selector).text
-        except Exception:
-            raise Exception("Failed to get text from element.")
+        except Exception as e:
+            raise Exception("Failed to get text from element: " + e)
 
     def get_html(self, selector: str) -> str:
         try:
             element = self._driver.find_element(By.CSS_SELECTOR, selector)
-            return element.get_attribute("outerHTML")
-        except Exception:
-            raise Exception("Failed to get HTML from element.")
+            return element.get_attribute('outerHTML')
+        except Exception as e:
+            raise Exception("Failed to get HTML from element: " + e)
 
     def find_elements(self, selector: str) -> list[WebElement]:
         self.scroll_to_bottom()
@@ -109,5 +109,5 @@ class Driver:
             elements = self._driver.find_elements(By.CSS_SELECTOR, selector)
             print("Number of elements found:", len(elements))
             return elements
-        except Exception:
-            raise Exception("Failed to find elements.")
+        except Exception as e:
+            raise Exception("Failed to find elements: " + e)
