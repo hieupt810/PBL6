@@ -1,24 +1,19 @@
 import json
-from pathlib import Path
-from uuid import uuid4
 
-import requests
 from bs4 import BeautifulSoup
 from sqlmodel import Session, select
 
 from app.core.crawler import Driver
 from app.core.db import engine
-from app.logger import get_logger
+from app.models.filter import Constant
 from app.models.product import Product
-
-logger = get_logger(__name__)
+from app.utils import predict, save_image
 
 
 def extract_attributes(html):
     soup = BeautifulSoup(html, "html.parser")
 
     attribute_data = {}
-
     for heading in soup.find_all("h3"):
         category = heading.text.strip()
         attribute_data[category] = {}
@@ -32,6 +27,7 @@ def extract_attributes(html):
                     key = left_div.text.strip()
                     value = right_div.find("span").text.strip()
                     attribute_data[category][key] = value
+
     return json.dumps(attribute_data)
 
 
@@ -58,30 +54,30 @@ def crawl_product(driver: Driver, index: int) -> None:
             if session.exec(stmt).first():
                 return
 
-            # Download the image from url
-            image_data = requests.get(image).content
-            image_path = Path(f"app/images/{uuid4()}.jpg")
-            image_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(image_path, "wb") as f:
-                f.write(image_data)
-            print("Description: " + description)
+            image_path = save_image(image)
+            predict_category = predict(image_path)
+            category = session.exec(
+                select(Constant).where(Constant.name == predict_category)
+            ).first()
             product = Product(
-                name=name, price=price, image=image, base=url, description=description
+                name=name,
+                price=price,
+                category_id=category.id,
+                image=image_path,
+                base=url,
+                description=description,
             )
-
-            # product = Product(name=name, price=price, image=image, base=url)
-
             session.add(product)
             session.commit()
-            print("Added product to database")
 
+            print(f"Product with id = {product.id} added to database successfully")
     except Exception:
         raise Exception("Error while crawling product")
     finally:
         driver.close_current_tab()
 
 
-def crawl_alibaba():
+def alibaba():
     driver = Driver(remote=True)
     try:
         driver.get("https://www.alibaba.com/")
@@ -104,6 +100,6 @@ def crawl_alibaba():
 
             driver.close_current_tab()
     except Exception as e:
-        logger.error(e)
+        print("[ERROR] Error while crawling Alibaba", e)
     finally:
         driver.quit()

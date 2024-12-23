@@ -2,8 +2,7 @@ from pydantic import BaseModel
 
 
 class Pagination(BaseModel):
-    total_records: int
-    total_pages: int
-    current: int
+    total: int
     next: int | None
-    prev: int | None
+    current: int | None
+    previous: int | None
