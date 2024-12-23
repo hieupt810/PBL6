@@ -8,34 +8,34 @@ from sqlmodel import Session
 from app.api.main import api_router
 from app.core.config import settings
 from app.core.db import engine, init_db
-from app.logger import get_logger
-from app.tasks.alibaba import crawl_alibaba
-from app.tasks.cleaner import products_cleaner
-
-logger = get_logger(__name__)
+from app.tasks.alibaba import alibaba
+from app.tasks.cleaner import cleaner
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
-        crawl_alibaba,
+        alibaba,
         "cron",
         hour=settings.CRON_HOUR,
         minute=settings.CRON_MINUTE,
         id="alibaba",
     )
-    scheduler.add_job(products_cleaner, "cron", hour=0, minute=0, id="products_cleaner")
+    scheduler.add_job(
+        cleaner, "cron", day_of_week="mon", hour=0, minute=0, id="cleaner"
+    )
+
     try:
         scheduler.start()
-        logger.info("Scheduler started.")
+        print("All jobs scheduled.")
         yield
     finally:
         scheduler.shutdown()
-        logger.info("Scheduler shut down.")
+        print("All jobs stopped.")
 
 
-app = FastAPI(title="PBL6 API", lifespan=lifespan)
+app = FastAPI(title="PBL6 FastAPI", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=(
