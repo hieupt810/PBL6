@@ -5,24 +5,23 @@ from sqlmodel import Session, select
 
 from app.core.crawler import Driver
 from app.core.db import engine
-from app.models.filter import Constant
 from app.models.product import Product
 from app.utils import predict, save_image
 
 
 def extract_attributes(html):
     soup = BeautifulSoup(html, "html.parser")
-
     attribute_data = {}
     for heading in soup.find_all("h3"):
         category = heading.text.strip()
         attribute_data[category] = {}
-
         attribute_list = heading.find_next_sibling("div", class_="attribute-list")
+
         if attribute_list:
             for item in attribute_list.find_all("div", class_="attribute-item"):
                 left_div = item.find("div", class_="left")
                 right_div = item.find("div", class_="right")
+
                 if left_div and right_div:
                     key = left_div.text.strip()
                     value = right_div.find("span").text.strip()
@@ -31,48 +30,46 @@ def extract_attributes(html):
     return json.dumps(attribute_data)
 
 
-def crawl_product(driver: Driver, index: int) -> None:
-    url = driver.get_attribute(f".hugo4-pc-grid-item:nth-child({index + 1}) a", "href")
+def get_product(driver: Driver, num: int) -> None:
+    base_selector = f".hugo4-pc-grid-item.top-ranking-card:nth-child({num + 1})"
+    url = driver.get_attribute(f"{base_selector} > a", "href")
     if not url:
-        raise Exception("Error to find product URL")
+        raise Exception("Error to find product URL.")
+
+    name = driver.get_text(f"{base_selector} > a > div > div.subject > span")
+    price = driver.get_text(
+        f"{base_selector} > a > div > div.hugo4-product-price-area > div > div"
+    )
+
+    # Get product image and predict category
+    image = driver.get_attribute(f"{base_selector} > a > div > div > img", "src")
+    filename = save_image(image)
+    category, probs = predict(filename)
+    print(f"[AI] Predicted category: {category} with probability: {probs}")
 
     try:
         driver.open_link(url)
-        name = driver.get_text(".product-title-container > h1")
-        price = driver.get_text(".product-price .price")
-        driver.click_button(
-            ".id-absolute.id-bottom-0.id-left-0.id-right-0.id-top-0.id-bg-black.id-opacity-5:nth-child(2)"
-        )
-        image = driver.get_attribute(".id-relative.id-h-full.id-w-full img", "src")
         description_html = driver.get_html(
             ".module_attribute > .attribute-layout > .attribute-info"
         )
         description = str(extract_attributes(description_html))
-
         with Session(engine) as session:
             stmt = select(Product).where(Product.name == name)
             if session.exec(stmt).first():
                 return
 
-            image_path = save_image(image)
-            predict_category = predict(image_path)
-            category = session.exec(
-                select(Constant).where(Constant.name == predict_category)
-            ).first()
             product = Product(
                 name=name,
                 price=price,
-                category_id=category.id,
-                image=image_path,
-                base=url,
+                category=category.lower(),
+                image=filename,
+                base_url=url,
                 description=description,
             )
             session.add(product)
             session.commit()
-
-            print(f"Product with id = {product.id} added to database successfully")
     except Exception:
-        raise Exception("Error while crawling product")
+        raise Exception("Something went wrong while getting product details.")
     finally:
         driver.close_current_tab()
 
@@ -80,26 +77,26 @@ def crawl_product(driver: Driver, index: int) -> None:
 def alibaba():
     driver = Driver(remote=True)
     try:
-        driver.get("https://www.alibaba.com/")
-        driver.click_link(".ranking-card-box > .ranking-title > .view-more")
-        driver.click_button(
-            ".tab-wrapper.level-2 > .tab-inner-wrapper > .tab-item:nth-child(2)"
-        )
+        driver.get("https://www.alibaba.com")
         driver.scroll_to_bottom()
 
-        for i in range(3):
+        driver.click_link(".ranking-title > a")
+        driver.click_button(".tab-wrapper.level-2 > div > div:nth-child(2) > div")
+        driver.scroll_to_bottom()
+
+        elements = driver.find_elements(".hugo4-pc-grid-item > div > div")
+        for i in range(len(elements)):
             driver.click_link(
-                f".hugo4-pc-grid .hugo4-pc-grid-item:nth-child({i + 1}) a"
+                f".hugo4-pc-grid-item:nth-child({i + 1}) > div > div > div > a"
             )
             driver.scroll_to_bottom()
-            for j in range(3):
-                try:
-                    crawl_product(driver, j)
-                except Exception:
-                    continue
 
-            driver.close_current_tab()
+            for num in range(5):
+                try:
+                    get_product(driver, num)
+                except Exception as e:
+                    print(e)
     except Exception as e:
-        print("[ERROR] Error while crawling Alibaba", e)
+        print(e)
     finally:
         driver.quit()

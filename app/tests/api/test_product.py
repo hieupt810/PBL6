@@ -1,17 +1,19 @@
-from datetime import datetime, timedelta, timezone
 import uuid
-from fastapi.testclient import TestClient
-import pytest
-from sqlmodel import Session, SQLModel, create_engine
-from sqlalchemy.pool import StaticPool
+from datetime import datetime, timezone
 
-from app.main import app
-from app.models.product import Product
-from app.models.constant import Constant
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.pool import StaticPool
+from sqlmodel import Session, SQLModel, create_engine
+
 from app.api.deps import get_db
+from app.main import app
+from app.models.constant import Constant
+from app.models.product import Product
 
 # Thiết lập database test
 SQLALCHEMY_DATABASE_URL = "sqlite:///api_test_db.db"
+
 
 @pytest.fixture
 def session():
@@ -24,6 +26,7 @@ def session():
     with Session(engine) as session:
         yield session
 
+
 @pytest.fixture
 def client(session):
     def get_session_override():
@@ -34,14 +37,11 @@ def client(session):
     yield client
     app.dependency_overrides.clear()
 
+
 @pytest.fixture
 def sample_products(session):
     # Tạo constant cho testing
-    constant = Constant(
-        id=uuid.uuid4(),
-        type=1,
-        name="7"
-    )
+    constant = Constant(id=uuid.uuid4(), type=1, name="7")
     session.add(constant)
 
     # Tạo một số sản phẩm test
@@ -54,12 +54,13 @@ def sample_products(session):
             price=str(100 + i),
             base="USD",
             created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
+            updated_at=datetime.now(timezone.utc),
         )
         products.append(product)
         session.add(product)
     session.commit()
     return products
+
 
 def test_read_products_list(client, sample_products):
     response = client.get("/api/v1/product")
@@ -72,6 +73,7 @@ def test_read_products_list(client, sample_products):
     assert data["pagination"]["total_records"] > 1
     assert data["pagination"]["total_pages"] > 1
 
+
 def test_read_products_list_with_pagination(client, sample_products):
     response = client.get("/api/v1/product?page=1")
     assert response.status_code == 200
@@ -82,6 +84,7 @@ def test_read_products_list_with_pagination(client, sample_products):
     assert data["pagination"]["total_pages"] >= 1
     assert data["pagination"]["total_records"] >= 1
 
+
 def test_read_product_detail(client, sample_products):
     product_id = sample_products[0].id
     response = client.get(f"/api/v1/product/{product_id}")
@@ -90,6 +93,7 @@ def test_read_product_detail(client, sample_products):
     data = response.json()
     assert data["id"] == str(product_id)
     assert data["name"] == "Test Product 0"
+
 
 def test_read_product_detail_not_found(client):
     fake_id = uuid.uuid4()

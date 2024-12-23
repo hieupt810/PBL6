@@ -1,15 +1,13 @@
-import uuid
-from fastapi.testclient import TestClient
 import pytest
-from sqlmodel import Session, SQLModel, create_engine
+from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
+from sqlmodel import Session, SQLModel, create_engine
 
 from app.main import app
-from app.models.constant import Constant
-from app.api.deps import get_db
 
 # Sử dụng lại các fixture từ test_product.py
 SQLALCHEMY_DATABASE_URL = "sqlite:///api_test_db.db"
+
 
 @pytest.fixture
 def session():
@@ -22,9 +20,11 @@ def session():
     with Session(engine) as session:
         yield session
 
+
 @pytest.fixture
 def client():
     return TestClient(app)
+
 
 def test_read_filter_list(client):
     response = client.get("/api/v1/const")

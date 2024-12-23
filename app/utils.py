@@ -23,7 +23,8 @@ def save_image(url):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
-    path = os.path.join(dir, f"{generate_id()}.jpg")
+    filename = f"{generate_id()}.jpg"
+    path = os.path.join(dir, filename)
 
     # Download the image
     try:
@@ -32,7 +33,7 @@ def save_image(url):
     except Exception:
         raise ValueError("Invalid image URL.")
 
-    return path
+    return filename
 
 
 CLASSES = [
@@ -49,9 +50,10 @@ CLASSES = [
 ]
 
 
-def predict(image_path, model_type: Literal["ResNet", "ViT"] = "ViT"):
+def predict(filename, model_type: Literal["ResNet", "ViT"] = "ViT"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     try:
+        image_path = os.path.join(os.getcwd(), "images", filename)
         image = Image.open(image_path)
     except Exception:
         raise ValueError("Invalid image path.")
@@ -62,7 +64,8 @@ def predict(image_path, model_type: Literal["ResNet", "ViT"] = "ViT"):
         model.to(device).eval()
 
         # Load the weights
-        weights = torch.load("", map_location=device, weights_only=True)
+        weights_path = os.path.join(os.getcwd(), "weights", "resnet_weights.pth")
+        weights = torch.load(weights_path, map_location=device, weights_only=True)
         model.load_state_dict(weights["model"])
 
         # Preprocess the image
@@ -87,7 +90,8 @@ def predict(image_path, model_type: Literal["ResNet", "ViT"] = "ViT"):
         model.to(device).eval()
 
         # Load the weights
-        weights = torch.load("", map_location=device, weights_only=True)
+        weights_path = os.path.join(os.getcwd(), "weights", "vit_weights.pth")
+        weights = torch.load(weights_path, map_location=device, weights_only=True)
         model.load_state_dict(weights)
 
         # Preprocess the image

@@ -10,7 +10,7 @@ class ProductPublic(SQLModel):
     id: str = Field(default_factory=lambda: generate_id(), primary_key=True, index=True)
 
     category: str | None = Field(nullable=False)
-    image_path: str | None = Field(default=None, nullable=True)
+    image: str | None = Field(default=None, nullable=True)
 
     name: str = Field(nullable=False)
     price: str = Field(nullable=False)

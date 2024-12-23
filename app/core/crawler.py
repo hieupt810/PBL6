@@ -8,15 +8,7 @@ from app.core.config import settings
 
 
 class Driver:
-    def __init__(
-        self,
-        remote: bool = True,
-        action_wait: int = 2,
-        load_wait: int = -1,
-    ) -> None:
-        self.action = action_wait
-        self.load = load_wait if load_wait > 0 else action_wait * 3
-
+    def __init__(self, remote: bool = True, loading: int = 5) -> None:
         options = ChromeOptions()
         if remote:
             self._driver = Remote(
@@ -24,33 +16,35 @@ class Driver:
             )
         else:
             self._driver = Chrome(options=options)
-            self._driver.maximize_window()
+
+        self.loading = loading
+        self._driver.maximize_window()
 
     def get(self, url: str) -> None:
         try:
             self._driver.get(url)
-            time.sleep(self.load)
+            time.sleep(self.loading)
             print("Opened browser with URL:", url)
         except Exception:
-            raise Exception(f"Failed to get URL: {url}")
+            raise Exception("Failed to get URL.")
 
     def close_current_tab(self) -> None:
         try:
             self._driver.close()
             self._driver.switch_to.window(self._driver.window_handles[-1])
-            time.sleep(self._action_wait)
-            logger.info("Successfully closed current tab")
-        except Exception as e:
-            raise Exception("Failed to close current tab: " + e)
+            time.sleep(0.5)
+            print("Closed current tab.")
+        except Exception:
+            raise Exception("Failed to close current tab.")
 
     def open_link(self, url: str) -> None:
         try:
             self._driver.execute_script(f"window.open('{url}', '_blank');")
             self._driver.switch_to.window(self._driver.window_handles[-1])
-            time.sleep(self.load)
+            time.sleep(self.loading)
             print("Opened link in new tab:", url)
         except Exception:
-            raise Exception("Failed to open link in new tab:", url)
+            raise Exception("Failed to open link in new tab.")
 
     def quit(self) -> None:
         try:
@@ -64,7 +58,7 @@ class Driver:
             self._driver.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight);"
             )
-            time.sleep(self.action)
+            time.sleep(0.5)
             print("Scrolled to the bottom of the page.")
         except Exception:
             raise Exception("Failed to scroll to the bottom of the page.")
@@ -72,36 +66,36 @@ class Driver:
     def click_link(self, selector: str) -> None:
         try:
             self.open_link(self.get_attribute(selector, "href"))
-        except Exception as e:
-            raise Exception("Failed to click link: " + e)
+        except Exception:
+            raise Exception("Failed to click link.")
 
     def click_button(self, selector: str) -> None:
         try:
             self._driver.find_element(By.CSS_SELECTOR, selector).click()
-            time.sleep(self._action_wait)
-            logger.info("Successfully clicked button")
-        except Exception as e:
-            raise Exception("Failed to click button: " + e)
+            time.sleep(0.5)
+            print("Clicked button.")
+        except Exception:
+            raise Exception("Failed to click button.")
 
     def get_attribute(self, selector: str, attribute: str) -> str:
         try:
             element = self._driver.find_element(By.CSS_SELECTOR, selector)
             return element.get_attribute(attribute)
-        except Exception as e:
-            raise Exception("Failed to get attribute from element: " + e)
+        except Exception:
+            raise Exception("Failed to get attribute from element.")
 
     def get_text(self, selector: str) -> str:
         try:
             return self._driver.find_element(By.CSS_SELECTOR, selector).text
-        except Exception as e:
-            raise Exception("Failed to get text from element: " + e)
+        except Exception:
+            raise Exception("Failed to get text from element.")
 
     def get_html(self, selector: str) -> str:
         try:
             element = self._driver.find_element(By.CSS_SELECTOR, selector)
-            return element.get_attribute('outerHTML')
-        except Exception as e:
-            raise Exception("Failed to get HTML from element: " + e)
+            return element.get_attribute("outerHTML")
+        except Exception:
+            raise Exception("Failed to get HTML from element.")
 
     def find_elements(self, selector: str) -> list[WebElement]:
         self.scroll_to_bottom()
@@ -109,5 +103,5 @@ class Driver:
             elements = self._driver.find_elements(By.CSS_SELECTOR, selector)
             print("Number of elements found:", len(elements))
             return elements
-        except Exception as e:
-            raise Exception("Failed to find elements: " + e)
+        except Exception:
+            raise Exception("Failed to find elements.")

@@ -2,7 +2,7 @@ from sqlmodel import SQLModel
 
 
 class FilterPublic(SQLModel):
-    options: list[str]
+    options: list
     parameter: str
     placeholder: str
 

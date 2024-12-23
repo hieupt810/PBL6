@@ -31,7 +31,7 @@ async def read_products_list(
     total_records = session.exec(stmt).one()
     total_pages = (total_records + size - 1) // size
 
-    if page < 1 or page > total_pages or size < 1:
+    if page < 1 or (page > total_pages and page != 1) or size < 1:
         raise HTTPException(status_code=400, detail="Invalid pagination parameters")
 
     # Products
