@@ -11,15 +11,15 @@ from sqlmodel import Session
 from app.api.main import api_router
 from app.core.config import settings
 from app.core.db import engine, init_db
-from app.tasks.alibaba import alibaba
 from app.tasks.cleaner import cleaner
+from app.utils import crawl_function
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
-        alibaba,
+        crawl_function,
         "cron",
         hour=settings.CRON_HOUR,
         minute=settings.CRON_MINUTE,
