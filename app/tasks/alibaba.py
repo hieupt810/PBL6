@@ -36,23 +36,28 @@ def get_product(driver: Driver, num: int) -> None:
     if not url:
         raise Exception("Error to find product URL.")
 
-    name = driver.get_text(f"{base_selector} > a > div > div.subject > span")
-    price = driver.get_text(
-        f"{base_selector} > a > div > div.hugo4-product-price-area > div > div"
-    )
-
-    # Get product image and predict category
-    image = driver.get_attribute(f"{base_selector} > a > div > div > img", "src")
-    filename = save_image(image)
-    category, probs = predict(filename)
-    print(f"[AI] Predicted category: {category} with probability: {probs}")
-
     try:
+        name = driver.get_text(f"{base_selector} > a > div > div.subject > span")
+        price = driver.get_text(
+            f"{base_selector} > a > div > div.hugo4-product-price-area > div > div"
+        )
+
+        # Get product image and predict category
+        image = driver.get_attribute(f"{base_selector} > a > div > div > img", "src")
+        filename = save_image(image)
+        category, probs = predict(filename)
+        print(
+            f"[AI] Predicted category {category} with probability is {100 * probs:.2f}%"
+        )
+
+        # Get product description
         driver.open_link(url)
         description_html = driver.get_html(
             ".module_attribute > .attribute-layout > .attribute-info"
         )
         description = str(extract_attributes(description_html))
+
+        # Save product to database
         with Session(engine) as session:
             stmt = select(Product).where(Product.name == name)
             if session.exec(stmt).first():
@@ -68,6 +73,7 @@ def get_product(driver: Driver, num: int) -> None:
             )
             session.add(product)
             session.commit()
+            print(f"Product with id {product.id} has been added.")
     except Exception:
         raise Exception("Something went wrong while getting product details.")
     finally:
