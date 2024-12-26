@@ -27,6 +27,7 @@ class Settings(BaseSettings):
         env_file=".env", env_ignore_empty=True, extra="ignore"
     )
 
+    SERVER_HOST: str = "http://localhost:8000"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: Literal["development", "production"] = "development"
     SECRET_KEY: str = secrets.token_urlsafe(32)

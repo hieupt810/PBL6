@@ -5,6 +5,7 @@ from sqlalchemy import func
 from sqlmodel import select
 
 from app.api.deps import SessionDep
+from app.core.config import settings
 from app.models.pagination import Pagination
 from app.models.product import Product, ProductsResponse
 
@@ -43,6 +44,8 @@ async def read_products_list(
         stmt.order_by(Product.created_at.desc()).limit(size).offset((page - 1) * size)
     )
     products = session.exec(stmt).all()
+    for product in products:
+        product.image = f"{settings.SERVER_HOST}/image/{product.image}"
 
     return ProductsResponse(
         data=products,
@@ -61,4 +64,5 @@ async def read_product_detail(id: str, session: SessionDep) -> Product:
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    product.image = f"{settings.SERVER_HOST}/image/{product.image}"
     return product

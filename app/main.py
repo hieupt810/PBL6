@@ -1,8 +1,10 @@
+import os
 from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqlmodel import Session
 
 from app.api.main import api_router
@@ -56,3 +58,12 @@ if settings.POSTGRES_RESET_TABLES:
     init()
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+
+@app.get("/image/{filename}")
+async def get_image(filename: str):
+    image_path = os.path.join(os.getcwd(), "images", filename)
+    if not os.path.exists(image_path):
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    return FileResponse(image_path)
