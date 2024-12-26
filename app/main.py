@@ -1,6 +1,7 @@
 import os
 from contextlib import asynccontextmanager
 
+from app.tasks.dhgate import crawl_dhgate
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

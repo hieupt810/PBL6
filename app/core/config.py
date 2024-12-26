@@ -85,7 +85,7 @@ class Settings(BaseSettings):
 
     # Cron
     CRON_HOUR: str = "*"
-    CRON_MINUTE: str = "*/2"
+    CRON_MINUTE: str = "*/1"
 
     @model_validator(mode="after")
     def _enforce_non_default_secrets(self) -> Self:

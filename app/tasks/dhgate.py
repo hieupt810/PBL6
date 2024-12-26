@@ -3,15 +3,13 @@ import time
 from uuid import uuid4
 
 import requests
+from app.utils import predict, save_image
 from sqlmodel import Session, select
 from bs4 import BeautifulSoup
 from app.core.crawler import Driver
 from app.core.db import engine
-from app.logger import get_logger
 from app.models.product import Product
 import json
-
-logger = get_logger(__name__)
 
 
 def extract_attributes(html):
@@ -55,6 +53,9 @@ def crawl_product(driver: Driver, index: int) -> None:
         print(price)
         image = driver.get_attribute("#masterImg", "src")
         print(str(image))
+        filename = save_image(image)
+        category, probs = predict(filename)
+        print(f"[AI] Predicted category: {category} with probability: {probs}")
         description_html = driver.get_html(".prodSpecifications_prodSpecifications__iKzXe")
         description = str(extract_attributes(description_html))
         print(description)
@@ -64,12 +65,19 @@ def crawl_product(driver: Driver, index: int) -> None:
                 return
 
             # Download the image from url
-            image_data = requests.get(image).content
-            image_path = Path(f"app/images/{uuid4()}.jpg")
-            image_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(image_path, "wb") as f:
-                f.write(image_data)
-            product = Product(name=name, price=price, image=image, base=url, description = description)
+            # image_data = requests.get(image).content
+            # image_path = Path(f"app/images/{uuid4()}.jpg")
+            # image_path.parent.mkdir(parents=True, exist_ok=True)
+            # with open(image_path, "wb") as f:
+            #     f.write(image_data)
+            product = Product(
+                name=name,
+                price=price,
+                category=category.lower(),
+                image=filename,
+                base_url=url,
+                description=description,
+            )
             session.add(product)
             session.commit()
             print("Added product " + name + " to database")
@@ -103,6 +111,6 @@ def crawl_dhgate():
         driver.close_current_tab()
 
     except Exception as e:
-        logger.error(e)
+        print(str(e))
     finally:
         driver.quit()
