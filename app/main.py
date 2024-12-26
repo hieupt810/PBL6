@@ -1,7 +1,6 @@
 import os
 from contextlib import asynccontextmanager
 
-from app.tasks.dhgate import crawl_dhgate
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,7 +22,7 @@ async def lifespan(app: FastAPI):
         "cron",
         hour=settings.CRON_HOUR,
         minute=settings.CRON_MINUTE,
-        id="alibaba",
+        id="crawler",
     )
     scheduler.add_job(
         cleaner, "cron", day_of_week="mon", hour=0, minute=0, id="cleaner"
