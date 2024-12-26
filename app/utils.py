@@ -11,6 +11,12 @@ from torch.nn.functional import softmax
 from torchvision import transforms
 from torchvision.models import ResNet101_Weights, resnet101
 
+from app.tasks.alibaba import alibaba
+
+
+def crawl_function():
+    alibaba()
+
 
 def generate_id():
     return "".join(
