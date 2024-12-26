@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from sqlmodel import SQLModel
 
 
-class Pagination(BaseModel):
+class Pagination(SQLModel):
     total: int
     next: int | None
     current: int | None
