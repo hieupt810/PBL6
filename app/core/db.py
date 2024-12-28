@@ -8,7 +8,5 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
 def init_db(session: Session) -> None:
-    SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
-
     session.exec(select(Product)).first()

@@ -28,8 +28,9 @@ def save_image(url):
 
     # Download the image
     try:
-        image = Image.open(requests.get(url, stream=True).raw)
-        image.save(path)
+        image = requests.get(url).content
+        with open(path, "wb") as f:
+            f.write(image)
     except Exception:
         raise ValueError("Invalid image URL.")
 
@@ -50,7 +51,7 @@ CLASSES = [
 ]
 
 
-def predict(filename, model_type: Literal["ResNet", "ViT"] = "ViT"):
+def predict(filename, model_type: Literal["resnet", "vit", "resnet_self"] = "ViT"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     try:
         image_path = os.path.join(os.getcwd(), "images", filename)
@@ -58,7 +59,7 @@ def predict(filename, model_type: Literal["ResNet", "ViT"] = "ViT"):
     except Exception:
         raise ValueError("Invalid image path.")
 
-    if model_type == "ResNet":
+    if model_type == "resnet":
         model = resnet101(weights=ResNet101_Weights.DEFAULT)
         model.fc = torch.nn.Linear(model.fc.in_features, 10)
         model.to(device).eval()
@@ -83,8 +84,8 @@ def predict(filename, model_type: Literal["ResNet", "ViT"] = "ViT"):
             output = model(batch)
 
         probs = torch.nn.functional.softmax(output[0], dim=0)
-        return CLASSES[probs.argmax().item()], probs.max().item()
-    elif model_type == "ViT":
+        return CLASSES[probs.argmax().item()], format(probs.max().item() * 100, ".2f")
+    elif model_type == "vit":
         model = timm.create_model("vit_base_patch16_224.augreg_in21k", pretrained=True)
         model.head = torch.nn.Linear(model.head.in_features, 10)
         model.to(device).eval()
@@ -109,6 +110,6 @@ def predict(filename, model_type: Literal["ResNet", "ViT"] = "ViT"):
             output = model(batch)
 
         probs = softmax(output[0], dim=0)
-        return CLASSES[probs.argmax().item()], probs.max().item()
+        return CLASSES[probs.argmax().item()], format(probs.max().item() * 100, ".2f")
     else:
         raise ValueError("Invalid model type.")

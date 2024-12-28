@@ -10,12 +10,15 @@ from sqlmodel import Session
 from app.api.main import api_router
 from app.core.config import settings
 from app.core.db import engine, init_db
+from app.logging import get_logger
 from app.tasks.alibaba import alibaba
 from app.tasks.cleaner import cleaner
+from app.tasks.dhgate import dhgate
 
 
 def crawl_function():
     alibaba()
+    dhgate()
 
 
 @asynccontextmanager
@@ -34,13 +37,12 @@ async def lifespan(app: FastAPI):
 
     try:
         scheduler.start()
-        print("All jobs scheduled.")
         yield
     finally:
         scheduler.shutdown()
-        print("All jobs stopped.")
 
 
+logger = get_logger(__name__)
 app = FastAPI(title="PBL6 FastAPI", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,

@@ -1,12 +1,16 @@
 import json
+import time
 
 from bs4 import BeautifulSoup
 from sqlmodel import Session, select
 
 from app.core.crawler import Driver
 from app.core.db import engine
+from app.logging import get_logger
 from app.models.product import Product
 from app.utils import predict, save_image
+
+logger = get_logger(__name__)
 
 
 def extract_attributes(html):
@@ -16,12 +20,10 @@ def extract_attributes(html):
         category = heading.text.strip()
         attribute_data[category] = {}
         attribute_list = heading.find_next_sibling("div", class_="attribute-list")
-
         if attribute_list:
             for item in attribute_list.find_all("div", class_="attribute-item"):
                 left_div = item.find("div", class_="left")
                 right_div = item.find("div", class_="right")
-
                 if left_div and right_div:
                     key = left_div.text.strip()
                     value = right_div.find("span").text.strip()
@@ -34,7 +36,7 @@ def get_product(driver: Driver, num: int) -> None:
     base_selector = f".hugo4-pc-grid-item.top-ranking-card:nth-child({num + 1})"
     url = driver.get_attribute(f"{base_selector} > a", "href")
     if not url:
-        raise Exception("Error to find product URL.")
+        raise ValueError("Error to find product URL.")
 
     try:
         name = driver.get_text(f"{base_selector} > a > div > div.subject > span")
@@ -46,9 +48,7 @@ def get_product(driver: Driver, num: int) -> None:
         image = driver.get_attribute(f"{base_selector} > a > div > div > img", "src")
         filename = save_image(image)
         category, probs = predict(filename)
-        print(
-            f"[AI] Predicted category {category} with probability is {100 * probs:.2f}%"
-        )
+        print(f"Predicted category {category} with probability is {probs}%")
 
         # Get product description
         driver.open_link(url)
@@ -73,9 +73,10 @@ def get_product(driver: Driver, num: int) -> None:
             )
             session.add(product)
             session.commit()
-            print(f"Product with id {product.id} has been added.")
-    except Exception:
-        raise Exception("Something went wrong while getting product details.")
+            logger.info(f"Product with id {product.id} has been added.")
+    except Exception as e:
+        logger.error(e)
+        raise RuntimeError("Something went wrong while getting product details.")
     finally:
         driver.close_current_tab()
 
@@ -97,12 +98,14 @@ def alibaba():
             )
             driver.scroll_to_bottom()
 
-            for num in range(5):
+            for num in range(10):
                 try:
                     get_product(driver, num)
+                    time.sleep(1)
                 except Exception as e:
-                    print(e)
+                    logger.error(e)
     except Exception as e:
-        print(e)
+        logger.error(e)
     finally:
         driver.quit()
+        time.sleep(5)

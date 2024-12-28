@@ -1,12 +1,12 @@
-from sqlmodel import SQLModel
+from pydantic import BaseModel
 
 
-class FilterPublic(SQLModel):
+class FilterPublic(BaseModel):
     options: list
     parameter: str
     placeholder: str
 
 
-class FilterListPublic(SQLModel):
+class FilterListPublic(BaseModel):
     data: list[FilterPublic]
     count: int

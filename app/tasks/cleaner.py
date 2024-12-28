@@ -3,7 +3,10 @@ from datetime import datetime, timedelta, timezone
 from sqlmodel import Session, select
 
 from app.core.db import engine
+from app.logging import get_logger
 from app.models.product import Product
+
+logger = get_logger(__name__)
 
 
 def cleaner():
@@ -21,4 +24,5 @@ def cleaner():
                 session.delete(product)
                 session.commit()
             except Exception:
-                print("Failed to delete product with id", product)
+                session.rollback()
+                logger.error("Failed to delete product with id", product.id)
