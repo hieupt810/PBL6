@@ -1,20 +1,35 @@
-from typing import Literal
-
 from fastapi import APIRouter
-from pydantic import BaseModel
 
-from app.api.routes.filter import router as filter_router
 from app.api.routes.product import router as product_router
-from app.utils import predict, save_image
+from app.models.filter import FilterListPublic, FilterPublic
+from app.models.test_request import TestModel
+from app.utils import CLASSES, predict, save_image
 
 api_router = APIRouter()
 api_router.include_router(product_router, prefix="/product", tags=["Product"])
-api_router.include_router(filter_router, prefix="/const", tags=["Constant"])
 
 
-class TestModel(BaseModel):
-    image_url: str
-    model: Literal["resnet", "vit", "resnet_self"]
+@api_router.get("/const")
+async def read_constants():
+    class_options = []
+    for value in CLASSES:
+        label = value.replace("_", " ").title()
+        class_options.append({"value": value, "label": label})
+
+    classes = FilterPublic(
+        options=class_options, parameter="c", placeholder="Select a category"
+    )
+
+    time_range_options = [{"value": "1", "label": "Last 1 day"}]
+    for value in ["7", "14", "21"]:
+        label = f"Last {value} days"
+        time_range_options.append({"value": value, "label": label})
+
+    time_ranges = FilterPublic(
+        options=time_range_options, parameter="t", placeholder="Select a time range"
+    )
+
+    return FilterListPublic(data=[classes, time_ranges], count=2)
 
 
 @api_router.post("/test")
