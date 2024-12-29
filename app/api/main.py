@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.api.routes.product import router as product_router
 from app.models.filter import FilterListPublic, FilterPublic
@@ -35,6 +35,8 @@ async def read_constants():
 @api_router.post("/test")
 async def test_model(body: TestModel):
     filename = save_image(body.image_url)
-    category, probs = predict(filename, model_type=body.model)
+    if body.model not in ["resnet", "vit", "resnet_self"]:
+        raise HTTPException(status_code=400, detail="Invalid model type.")
 
+    category, probs = predict(filename, model_type=body.model)
     return {"category": category, "probabilities": f"{probs}%"}

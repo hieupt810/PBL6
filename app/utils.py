@@ -11,6 +11,8 @@ from torch.nn.functional import softmax
 from torchvision import transforms
 from torchvision.models import ResNet101_Weights, resnet101
 
+from app.resnet import ResNet101
+
 
 def generate_id():
     return "".join(
@@ -51,7 +53,7 @@ CLASSES = [
 ]
 
 
-def predict(filename, model_type: Literal["resnet", "vit", "resnet_self"] = "ViT"):
+def predict(filename, model_type: Literal["resnet", "vit", "resnet_self"] = "vit"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     try:
         image_path = os.path.join(os.getcwd(), "images", filename)
@@ -102,6 +104,31 @@ def predict(filename, model_type: Literal["resnet", "vit", "resnet_self"] = "ViT
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
+        batch = preprocess(image).unsqueeze(0).to(device)
+        with torch.inference_mode():
+            output = model(batch)
+
+        probs = softmax(output[0], dim=0)
+        return CLASSES[probs.argmax().item()], format(probs.max().item() * 100, ".2f")
+    elif model_type == "resnet_self":
+        model = ResNet101(num_classes=len(CLASSES))
+        model.to(device).eval()
+
+        # Load the weights
+        weights_path = os.path.join(os.getcwd(), "weights", "resnet_weights.pth")
+        weights = torch.load(weights_path, map_location=device, weights_only=True)
+        model.load_state_dict(weights["model"])
+
+        # Preprocess the image
+        preprocess = transforms.Compose(
+            [
+                transforms.Resize((224, 224), antialias=True),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    [0.7037, 0.6818, 0.6685], [0.2739, 0.2798, 0.2861]
                 ),
             ]
         )
