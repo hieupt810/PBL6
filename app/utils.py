@@ -53,7 +53,11 @@ CLASSES = [
 ]
 
 
-def predict(filename, model_type: Literal["resnet", "vit", "resnet_self"] = "vit"):
+def predict(
+    filename,
+    model_type: Literal["resnet", "vit", "resnet_self"] = "vit",
+    base_directory=os.getcwd(),
+):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     try:
         image_path = os.path.join(os.getcwd(), "images", filename)
@@ -63,11 +67,13 @@ def predict(filename, model_type: Literal["resnet", "vit", "resnet_self"] = "vit
 
     if model_type == "resnet":
         model = resnet101(weights=ResNet101_Weights.DEFAULT)
-        model.fc = torch.nn.Linear(model.fc.in_features, 10)
+        model.fc = torch.nn.Linear(model.fc.in_features, len(CLASSES))
         model.to(device).eval()
 
         # Load the weights
-        weights_path = os.path.join(os.getcwd(), "weights", "resnet_weights.pth")
+        weights_path = os.path.join(
+            base_directory, "weights", "resnet_tuning_weights.pth"
+        )
         weights = torch.load(weights_path, map_location=device, weights_only=True)
         model.load_state_dict(weights["model"])
 
@@ -88,12 +94,12 @@ def predict(filename, model_type: Literal["resnet", "vit", "resnet_self"] = "vit
         probs = torch.nn.functional.softmax(output[0], dim=0)
         return CLASSES[probs.argmax().item()], format(probs.max().item() * 100, ".2f")
     elif model_type == "vit":
-        model = timm.create_model("vit_base_patch16_224.augreg_in21k", pretrained=True)
-        model.head = torch.nn.Linear(model.head.in_features, 10)
+        model = timm.create_model("vit_base_patch16_224.augreg_in21k")
+        model.head = torch.nn.Linear(model.head.in_features, len(CLASSES))
         model.to(device).eval()
 
         # Load the weights
-        weights_path = os.path.join(os.getcwd(), "weights", "vit_weights.pth")
+        weights_path = os.path.join(base_directory, "weights", "vit_weights.pth")
         weights = torch.load(weights_path, map_location=device, weights_only=True)
         model.load_state_dict(weights)
 
@@ -118,9 +124,9 @@ def predict(filename, model_type: Literal["resnet", "vit", "resnet_self"] = "vit
         model.to(device).eval()
 
         # Load the weights
-        weights_path = os.path.join(os.getcwd(), "weights", "resnet_weights.pth")
+        weights_path = os.path.join(base_directory, "weights", "resnet_weights.pth")
         weights = torch.load(weights_path, map_location=device, weights_only=True)
-        model.load_state_dict(weights["model"])
+        model.load_state_dict(weights)
 
         # Preprocess the image
         preprocess = transforms.Compose(
