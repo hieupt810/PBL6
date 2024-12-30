@@ -16,13 +16,13 @@ router = APIRouter()
 async def read_products_list(
     session: SessionDep,
     c: str = None,
-    t: str = "30",
+    t: int = 30,
     page: int = 1,
     size: int = 10,
 ) -> ProductsResponse:
     # Format datetime
     from_date = datetime.combine(
-        datetime.now(timezone.utc) - timedelta(days=int(t)), datetime.min.time()
+        datetime.now(timezone.utc) - timedelta(days=t), datetime.min.time()
     )
 
     # Pagnination

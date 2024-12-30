@@ -10,6 +10,7 @@ class ProductPublic(SQLModel):
     id: str = Field(default_factory=lambda: generate_id(), primary_key=True, index=True)
 
     category: str | None = Field(nullable=False)
+    probability: str | None = Field(nullable=False)
     image: str | None = Field(default=None, nullable=True)
 
     name: str = Field(nullable=False)

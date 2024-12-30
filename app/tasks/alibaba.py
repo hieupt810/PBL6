@@ -39,16 +39,18 @@ def get_product(driver: Driver, num: int) -> None:
         raise ValueError("Error to find product URL.")
 
     try:
-        name = driver.get_text(f"{base_selector} > a > div > div.subject > span")
+        name = driver.get_text(
+            f"{base_selector} > a > div > div.subject > span"
+        ).strip()
         price = driver.get_text(
             f"{base_selector} > a > div > div.hugo4-product-price-area > div > div"
-        )
+        ).strip()
 
         # Get product image and predict category
         image = driver.get_attribute(f"{base_selector} > a > div > div > img", "src")
         filename = save_image(image)
         category, probs = predict(filename)
-        print(f"Predicted category {category} with probability is {probs}%")
+        logger.info(f"Predicted category {category} with probability is {probs}%")
 
         # Get product description
         driver.open_link(url)
@@ -68,6 +70,7 @@ def get_product(driver: Driver, num: int) -> None:
                 price=price,
                 category=category.lower(),
                 image=filename,
+                probability=probs,
                 base_url=url,
                 description=description,
             )
