@@ -51,8 +51,9 @@ def crawl_product(driver: Driver, index: int) -> None:
         price = driver.get_text(f"#mainList > div > ul > li:nth-child({index}) .pro-price strong").strip()
         print(price)
         image = driver.get_attribute(f"#mainList > div > ul > li:nth-child({index}) img", "src")
-        # print(str(image))
+        print(str(image))
         filename = save_image(image)
+        print(filename)
         #predict
         time.sleep(5)
         category, probs = predict(filename)
@@ -72,7 +73,7 @@ def crawl_product(driver: Driver, index: int) -> None:
             product = Product(
                 name=name,
                 price=price,
-                category="category.lower()",
+                category=category.lower(),
                 image=filename,
                 base_url=url,
                 description=description,
@@ -81,8 +82,8 @@ def crawl_product(driver: Driver, index: int) -> None:
             session.commit()
             print("Added product " + name + " to database")
 
-    except Exception:
-        print("Error while crawling product")
+    except Exception as e:
+        print("Error while crawling product" + str(e))
     finally:
         driver.close_current_tab()
         print("CLOSE TAB " + url)
