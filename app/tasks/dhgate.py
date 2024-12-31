@@ -15,17 +15,13 @@ logger = get_logger(__name__)
 
 def extract_attributes(html):
     soup = BeautifulSoup(html, "html.parser")
-
     attribute_data = {}
     category = "Specification"
     attribute_data[category] = {}
     spec_items = soup.select(".prodSpecifications_showUl__fmY8y li")
 
     for item in spec_items:
-        # Lấy key (phần text trước dấu :)
         key = item.find("span").text.strip().replace(":", "").strip()
-
-        # Lấy value (phần text trong div)
         value_div = item.find("div", class_="prodSpecifications_deswrap___Z092")
         if value_div:
             value = (
@@ -39,7 +35,6 @@ def extract_attributes(html):
 
 
 def crawl_product(driver: Driver, index: int) -> None:
-    # Lấy URL sản phẩm từ thẻ <a>
     url = driver.get_attribute(
         f"#mainList > div > ul > li:nth-child({index}) a", "href"
     ).strip()

@@ -19,6 +19,7 @@ async def read_products_list(
     t: int = 30,
     page: int = 1,
     size: int = 10,
+    sort: int = 1,
 ) -> ProductsResponse:
     # Format datetime
     from_date = datetime.combine(
@@ -40,9 +41,19 @@ async def read_products_list(
     if c:
         stmt = stmt.where(Product.category == c.lower())
 
-    stmt = (
-        stmt.order_by(Product.created_at.desc()).limit(size).offset((page - 1) * size)
-    )
+    # Sorting
+    if sort == 1:
+        stmt = stmt.order_by(Product.created_at.desc())
+    elif sort == 2:
+        stmt = stmt.order_by(Product.price)
+    elif sort == 3:
+        stmt = stmt.order_by(Product.price.desc())
+    elif sort == 4:
+        stmt = stmt.order_by(Product.probability.desc())
+    else:
+        raise HTTPException(status_code=400, detail="Invalid sorting parameter")
+
+    stmt = stmt.limit(size).offset((page - 1) * size)
     products = session.exec(stmt).all()
     for product in products:
         product.image = f"{settings.SERVER_HOST}/image/{product.image}"

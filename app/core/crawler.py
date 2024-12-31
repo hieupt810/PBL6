@@ -106,7 +106,7 @@ class Driver:
     def find_elements(self, selector: str) -> list[WebElement]:
         try:
             elements = self._driver.find_elements(By.CSS_SELECTOR, selector)
-            logger.info("Number of elements found:", len(elements))
+            logger.info(f"Number of elements found: {len(elements)}")
             return elements
         except Exception:
             raise RuntimeError("Something went wrong while finding elements.")

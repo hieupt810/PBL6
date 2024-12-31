@@ -11,13 +11,17 @@ api_router.include_router(product_router, prefix="/product", tags=["Product"])
 
 @api_router.get("/const")
 async def read_constants():
+    data = []
+
     # Page size
     size_options = []
     for value in sorted([8, 16, 32, 64]):
         size_options.append({"value": f"{value}", "label": f"{value}"})
 
-    sizes = FilterPublic(
-        options=size_options, parameter="size", placeholder="Number of shown items"
+    data.append(
+        FilterPublic(
+            options=size_options, parameter="size", placeholder="Number of shown items"
+        )
     )
 
     # Categories
@@ -26,7 +30,9 @@ async def read_constants():
         label = value.replace("_", " ").title()
         class_options.append({"value": value, "label": label})
 
-    classes = FilterPublic(options=class_options, parameter="c", placeholder="Category")
+    data.append(
+        FilterPublic(options=class_options, parameter="c", placeholder="Category")
+    )
 
     # Time ranges
     time_range_options = []
@@ -34,11 +40,24 @@ async def read_constants():
         label = f"Last {value} days"
         time_range_options.append({"value": f"{value}", "label": label})
 
-    time_ranges = FilterPublic(
-        options=time_range_options, parameter="t", placeholder="Time range"
+    data.append(
+        FilterPublic(
+            options=time_range_options, parameter="t", placeholder="Time range"
+        )
     )
 
-    return FilterListPublic(data=[sizes, classes, time_ranges], count=3)
+    # Sort options
+    sort_options = [
+        {"value": "1", "label": "Newest"},
+        {"value": "2", "label": "Price: Low to High"},
+        {"value": "3", "label": "Price: High to Low"},
+        {"value": "4", "label": "Probability"},
+    ]
+    data.append(
+        FilterPublic(options=sort_options, parameter="sort", placeholder="Sort")
+    )
+
+    return FilterListPublic(data=data, count=len(data))
 
 
 @api_router.post("/test")
