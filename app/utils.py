@@ -30,7 +30,12 @@ def save_image(url):
 
     # Download the image
     try:
-        image = requests.get(url).content
+        image = requests.get(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            },
+        ).content
         with open(path, "wb") as f:
             f.write(image)
     except Exception:
@@ -55,7 +60,7 @@ CLASSES = [
 
 def predict(
     filename,
-    model_type: Literal["resnet", "vit", "resnet_self"] = "vit",
+    model_type: Literal["resnet", "vit", "resnet_self"] = "resnet",
     base_directory=os.getcwd(),
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
